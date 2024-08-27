@@ -7,8 +7,8 @@
 2. Grab a RPC (eg. from nodereal) with history 
 ```
 // testnet fork test for v4, mainnet fork test for v2/v3 
-export FORK_URL=https://bsc-mainnet.nodereal.io/v1/xxx
-export TESTNET_FORK_URL=https://bsc-testnet.nodereal.io/v1/xxx
+export FORK_URL=https://bsc-mainnet.nodereal.io/v1/xxxx
+export TESTNET_FORK_URL=https://bsc-testnet.nodereal.io/v1/xxxx
 ```
 
 3. Run test with `forge test`
