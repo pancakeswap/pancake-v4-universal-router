@@ -1,0 +1,37 @@
+[profile.default]
+src = 'src'
+out = 'foundry-out'
+solc_version = '0.8.26'
+optimizer_runs = 9000
+via_ir = true
+ffi = true
+gas_limit = "3000000000"
+fs_permissions = [
+    { access = "read-write", path = ".forge-snapshots/" },
+    { access = "read", path = "./foundry-out" },
+    { access = "read", path = "./script/config" },
+    { access = "read", path = "./test/bin/" },
+]
+evm_version = 'cancun'
+
+[fuzz]
+runs = 1000 # change this for higher number of fuzz/invariant locally
+
+[invariant]
+depth = 15 # revert to 15 as default is 500: https://github.com/foundry-rs/foundry/pull/7957
+
+[profile.ci.fuzz]
+runs = 10000
+
+[profile.ci.invariant]
+runs = 1000            # The number of calls to make in the invariant tests
+call_override = false  # Override calls
+fail_on_revert = false # Fail the test if the contract reverts
+
+[profile.ci_main.fuzz]
+runs = 100000
+
+[profile.ci_main.invariant]
+runs = 10000           # The number of calls to make in the invariant tests
+call_override = false  # Override calls
+fail_on_revert = false # Fail the test if the contract reverts

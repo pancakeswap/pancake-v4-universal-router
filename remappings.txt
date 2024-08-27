@@ -1,0 +1,7 @@
+forge-std/=lib/forge-std/src/
+ds-test/=lib/forge-std/lib/ds-test/src/
+@openzeppelin/=lib/pancake-v4-periphery/lib/pancake-v4-core/lib/openzeppelin-contracts/
+solmate/=lib/pancake-v4-periphery/lib/pancake-v4-core/lib/solmate/
+pancake-v4-periphery/=lib/pancake-v4-periphery/
+pancake-v4-core/=lib/pancake-v4-periphery/lib/pancake-v4-core
+permit2/=lib/pancake-v4-periphery/lib/permit2/

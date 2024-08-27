@@ -1,0 +1,29 @@
+name: Tests
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  forge-tests:
+    name: Forge Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - name: Run tests
+        run: forge test -vvv --isolate
+        env:
+          FOUNDRY_PROFILE: ci
+          FORK_URL: ${{ secrets.FORK_URL }}
+          TESTNET_FORK_URL: ${{ secrets.TESTNET_FORK_URL }}

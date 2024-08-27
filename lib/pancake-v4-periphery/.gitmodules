@@ -1,0 +1,6 @@
+[submodule "lib/pancake-v4-core"]
+	path = lib/pancake-v4-core
+	url = https://github.com/pancakeswap/pancake-v4-core
+[submodule "lib/permit2"]
+	path = lib/permit2
+	url = https://github.com/pancakeswap/permit2

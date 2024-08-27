@@ -1,0 +1,13 @@
+{
+  "permit2": "0x",
+  "weth": "0x",
+  "vault": "0x",
+  "clPoolManager": "0x",
+  "binPoolManager": "0x",
+  "clPositionManager": "0x",
+  "binPositionManager": "0x",
+  "clQuoter:": "0x",
+  "binQuoter": "0x",
+  "clMigrator": "0x",
+  "binMigrator": "0x"
+}
