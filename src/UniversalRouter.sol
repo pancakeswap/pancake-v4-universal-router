@@ -46,7 +46,7 @@ contract UniversalRouter is RouterImmutables, IUniversalRouter, Dispatcher, Paus
         if (inputs.length != numCommands) revert LengthMismatch();
 
         // loop through all given commands, execute them and pass along outputs as defined
-        for (uint256 commandIndex = 0; commandIndex < numCommands;) {
+        for (uint256 commandIndex = 0; commandIndex < numCommands; commandIndex++) {
             bytes1 command = commands[commandIndex];
 
             bytes calldata input = inputs[commandIndex];
@@ -55,10 +55,6 @@ contract UniversalRouter is RouterImmutables, IUniversalRouter, Dispatcher, Paus
 
             if (!success && successRequired(command)) {
                 revert ExecutionFailed({commandIndex: commandIndex, message: output});
-            }
-
-            unchecked {
-                commandIndex++;
             }
         }
     }
