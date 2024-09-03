@@ -281,8 +281,7 @@ abstract contract Dispatcher is
             if (command == Commands.EXECUTE_SUB_PLAN) {
                 bytes calldata _commands = inputs.toBytes(0);
                 bytes[] calldata _inputs = inputs.toBytesArray(1);
-                (success, output) =
-                    (address(this)).call(abi.encodeWithSelector(Dispatcher.execute.selector, _commands, _inputs));
+                (success, output) = (address(this)).call(abi.encodeCall(Dispatcher.execute, (_commands, _inputs)));
             } else if (command == Commands.STABLE_SWAP_EXACT_IN) {
                 // equivalent: abi.decode(inputs, (address, uint256, uint256, bytes, bytes, bool))
                 address recipient;
