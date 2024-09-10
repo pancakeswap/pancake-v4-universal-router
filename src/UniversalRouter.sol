@@ -12,16 +12,21 @@ import {StableSwapRouter} from "./modules/pancakeswap/StableSwapRouter.sol";
 import {Pausable} from "@openzeppelin/contracts/utils/Pausable.sol";
 
 contract UniversalRouter is RouterImmutables, IUniversalRouter, Dispatcher, Pausable {
-    modifier checkDeadline(uint256 deadline) {
-        if (block.timestamp > deadline) revert TransactionDeadlinePassed();
-        _;
-    }
-
     constructor(RouterParameters memory params)
         RouterImmutables(params)
         StableSwapRouter(params.stableFactory, params.stableInfo)
         V4SwapRouter(params.v4Vault, params.v4ClPoolManager, params.v4BinPoolManager)
     {}
+
+    modifier checkDeadline(uint256 deadline) {
+        if (block.timestamp > deadline) revert TransactionDeadlinePassed();
+        _;
+    }
+
+    /// @notice To receive ETH from WETH
+    receive() external payable {
+        if (msg.sender != address(WETH9) && msg.sender != address(vault)) revert InvalidEthSender();
+    }
 
     /// @inheritdoc IUniversalRouter
     function execute(bytes calldata commands, bytes[] calldata inputs, uint256 deadline)
@@ -75,10 +80,5 @@ contract UniversalRouter is RouterImmutables, IUniversalRouter, Dispatcher, Paus
      */
     function unpause() external onlyOwner whenPaused {
         _unpause();
-    }
-
-    /// @notice To receive ETH from WETH
-    receive() external payable {
-        if (msg.sender != address(WETH9) && msg.sender != address(vault)) revert InvalidEthSender();
     }
 }
