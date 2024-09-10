@@ -19,7 +19,6 @@ abstract contract Payments is RouterImmutables {
 
     error InsufficientToken();
     error InsufficientETH();
-    error InvalidSpender();
 
     /// @notice Pays an amount of ETH or ERC20 to a recipient
     /// @param token The token to pay (can be ETH using Constants.ETH)
