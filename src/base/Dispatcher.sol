@@ -244,16 +244,19 @@ abstract contract Dispatcher is
                     (success, output) = address(V3_POSITION_MANAGER).call(inputs);
                 } else if (command == Commands.V3_POSITION_MANAGER_CALL) {
                     bytes4 selector;
-                    uint256 tokenId;
                     assembly {
                         selector := calldataload(inputs.offset)
+                    }
+                    if (!isValidAction(selector)) {
+                        revert InvalidAction(selector);
+                    }
+
+                    uint256 tokenId;
+                    assembly {
                         // tokenId is always the first parameter in the valid actions
                         tokenId := calldataload(add(inputs.offset, 0x04))
                     }
 
-                    if (!isValidAction(selector)) {
-                        revert InvalidAction(selector);
-                    }
                     // If any other address that is not the owner wants to call this function, it also needs to be approved (in addition to this contract)
                     // This can be done in 2 ways:
                     //    1. This contract is permitted for the specific token and the caller is approved for ALL of the owner's tokens
