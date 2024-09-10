@@ -46,10 +46,12 @@ abstract contract Dispatcher is
 
         success = true;
 
-        if (command < Commands.FOURTH_IF_BOUNDARY) {
-            if (command < Commands.SECOND_IF_BOUNDARY) {
+        // 0x00 <= command < 0x21
+        if (command < Commands.EXECUTE_SUB_PLAN) {
+            // 0x00 <= command < 0x10
+            if (command < Commands.V4_SWAP) {
                 // 0x00 <= command < 0x08
-                if (command < Commands.FIRST_IF_BOUNDARY) {
+                if (command < Commands.V2_SWAP_EXACT_IN) {
                     if (command == Commands.V3_SWAP_EXACT_IN) {
                         // equivalent: abi.decode(inputs, (address, uint256, uint256, bytes, bool))
                         address recipient;
@@ -139,8 +141,8 @@ abstract contract Dispatcher is
                         // placeholder area for command 0x07
                         revert InvalidCommandType(command);
                     }
-                    // 0x08 <= command < 0x10
                 } else {
+                    // 0x08 <= command < 0x10
                     if (command == Commands.V2_SWAP_EXACT_IN) {
                         // equivalent: abi.decode(inputs, (address, uint256, uint256, bytes, bool))
                         address recipient;
@@ -224,8 +226,8 @@ abstract contract Dispatcher is
                         revert InvalidCommandType(command);
                     }
                 }
-                // 0x10 <= command < 0x18
             } else {
+                // 0x10 <= command < 0x21
                 if (command == Commands.V4_SWAP) {
                     // pass the calldata provided to V4SwapRouter._executeActions (defined in BaseActionsRouter)
                     _executeActions(inputs);
@@ -273,12 +275,12 @@ abstract contract Dispatcher is
                     // do not permit or approve this contract over a v4 position or someone could use this command to decrease/burn your position
                     (success, output) = address(V4_BIN_POSITION_MANAGER).call{value: address(this).balance}(inputs);
                 } else {
-                    // placeholder area for command
+                    // placeholder area for commands 0x15-0x20
                     revert InvalidCommandType(command);
                 }
             }
-            // 0x20 <= command
         } else {
+            // 0x21 <= command
             if (command == Commands.EXECUTE_SUB_PLAN) {
                 bytes calldata _commands = inputs.toBytes(0);
                 bytes[] calldata _inputs = inputs.toBytesArray(1);
@@ -321,7 +323,7 @@ abstract contract Dispatcher is
                 uint256 amountIn = stableSwapExactOutputAmountIn(amountOut, amountInMax, path, flag);
                 stableSwapExactOutput(map(recipient), amountIn, amountOut, path, flag, payer);
             } else {
-                // placeholder area for commands 0x23-0x3f
+                // placeholder area for commands 0x24-0x3f
                 revert InvalidCommandType(command);
             }
         }
