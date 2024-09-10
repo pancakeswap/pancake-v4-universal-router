@@ -268,11 +268,11 @@ abstract contract Dispatcher is
                     (success, output) = address(V3_POSITION_MANAGER).call(inputs);
                 } else if (command == Commands.V4_CL_POSITION_CALL) {
                     // should only call modifyLiquidities() with Actions.CL_MINT_POSITION
-                    // do not permit or approve this contract over a v4 position or someone could use this command to decrease/burn your position
+                    // do not permit or approve this contract over a v4 position or someone could use this command to decrease, burn, or transfer your position
                     (success, output) = address(V4_CL_POSITION_MANAGER).call{value: address(this).balance}(inputs);
                 } else if (command == Commands.V4_BIN_POSITION_CALL) {
                     // should only call modifyLiquidities() with Actions.BIN_ADD_LIQUIDITY
-                    // do not permit or approve this contract over a v4 position or someone could use this command to decrease/burn your position
+                    // do not permit or approve this contract over a v4 position or someone could use this command to decrease, burn, or transfer your position
                     (success, output) = address(V4_BIN_POSITION_MANAGER).call{value: address(this).balance}(inputs);
                 } else {
                     // placeholder area for commands 0x15-0x20
