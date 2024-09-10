@@ -64,7 +64,7 @@ contract CLNativePancakeSwapV4Test is BasePancakeSwapV4 {
 
         token1 = MockERC20(Currency.unwrap(currency1));
 
-        positionManager = new CLPositionManager(vault, poolManager, permit2);
+        positionManager = new CLPositionManager(vault, poolManager, permit2, 100_000);
         _approvePermit2ForCurrency(address(this), currency1, address(positionManager), permit2);
 
         RouterParameters memory params = RouterParameters({
