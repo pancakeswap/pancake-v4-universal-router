@@ -16,6 +16,7 @@ import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol"
 import {IERC721Permit} from "pancake-v4-periphery/src/pool-cl/interfaces/IERC721Permit.sol";
 import {ActionConstants} from "pancake-v4-periphery/src/libraries/ActionConstants.sol";
 import {BaseActionsRouter} from "pancake-v4-periphery/src/base/BaseActionsRouter.sol";
+import {CalldataDecoder} from "pancake-v4-periphery/src/libraries/CalldataDecoder.sol";
 
 /// @title Decodes and Executes Commands
 /// @notice Called by the UniversalRouter contract to efficiently decode and execute a singular command
@@ -29,6 +30,7 @@ abstract contract Dispatcher is
     Lock
 {
     using BytesLib for bytes;
+    using CalldataDecoder for bytes;
 
     error InvalidCommandType(uint256 commandType);
     error BalanceTooLow();
@@ -293,8 +295,7 @@ abstract contract Dispatcher is
         } else {
             // 0x21 <= command
             if (command == Commands.EXECUTE_SUB_PLAN) {
-                bytes calldata _commands = inputs.toBytes(0);
-                bytes[] calldata _inputs = inputs.toBytesArray(1);
+                (bytes calldata _commands, bytes[] calldata _inputs) = inputs.decodeCommandsAndInputs();
                 (success, output) = (address(this)).call(abi.encodeCall(Dispatcher.execute, (_commands, _inputs)));
             } else if (command == Commands.STABLE_SWAP_EXACT_IN) {
                 // equivalent: abi.decode(inputs, (address, uint256, uint256, bytes, bytes, bool))

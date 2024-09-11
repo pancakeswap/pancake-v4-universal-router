@@ -123,7 +123,7 @@ contract V3ToV4MigrationTest is BasePancakeSwapV4, OldVersionHelper, BinLiquidit
         _approvePermit2ForCurrency(address(this), currency0, address(binPositionManager), permit2);
         _approvePermit2ForCurrency(address(this), currency1, address(binPositionManager), permit2);
 
-        clPositionManager = new CLPositionManager(vault, clPoolManager, permit2);
+        clPositionManager = new CLPositionManager(vault, clPoolManager, permit2, 100_000);
         _approvePermit2ForCurrency(address(this), currency0, address(clPositionManager), permit2);
         _approvePermit2ForCurrency(address(this), currency1, address(clPositionManager), permit2);
 

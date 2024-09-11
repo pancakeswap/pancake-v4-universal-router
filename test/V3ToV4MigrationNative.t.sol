@@ -92,7 +92,7 @@ contract V3ToV4MigrationNativeTest is BasePancakeSwapV4, OldVersionHelper, BinLi
         binPositionManager = new BinPositionManager(vault, binPoolManager, permit2);
         _approvePermit2ForCurrency(address(this), currency1, address(binPositionManager), permit2);
 
-        clPositionManager = new CLPositionManager(vault, clPoolManager, permit2);
+        clPositionManager = new CLPositionManager(vault, clPoolManager, permit2, 100_000);
         _approvePermit2ForCurrency(address(this), currency1, address(clPositionManager), permit2);
 
         clPoolKey = PoolKey({

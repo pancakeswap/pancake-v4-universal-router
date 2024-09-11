@@ -70,7 +70,7 @@ contract CLPancakeSwapV4Test is BasePancakeSwapV4 {
         token1 = MockERC20(Currency.unwrap(currency1));
         token2 = MockERC20(Currency.unwrap(currency2));
 
-        positionManager = new CLPositionManager(vault, poolManager, permit2);
+        positionManager = new CLPositionManager(vault, poolManager, permit2, 100_000);
         _approvePermit2ForCurrency(address(this), currency0, address(positionManager), permit2);
         _approvePermit2ForCurrency(address(this), currency1, address(positionManager), permit2);
         _approvePermit2ForCurrency(address(this), currency2, address(positionManager), permit2);

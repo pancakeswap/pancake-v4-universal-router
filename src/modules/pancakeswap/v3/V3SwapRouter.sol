@@ -11,11 +11,13 @@ import {UniversalRouterHelper} from "../../../libraries/UniversalRouterHelper.so
 import {RouterImmutables} from "../../../base/RouterImmutables.sol";
 import {Permit2Payments} from "../../Permit2Payments.sol";
 import {ERC20} from "solmate/src/tokens/ERC20.sol";
+import {CalldataDecoder} from "pancake-v4-periphery/src/libraries/CalldataDecoder.sol";
 
 /// @title Router for PancakeSwap v3 Trades
 abstract contract V3SwapRouter is RouterImmutables, Permit2Payments, IPancakeV3SwapCallback {
     using UniversalRouterHelper for bytes;
     using BytesLib for bytes;
+    using CalldataDecoder for bytes;
     using SafeCast for uint256;
 
     error V3InvalidSwap();
