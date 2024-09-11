@@ -8,7 +8,6 @@ import {StableSwapRouter} from "../modules/pancakeswap/StableSwapRouter.sol";
 import {Payments} from "../modules/Payments.sol";
 import {RouterImmutables} from "../base/RouterImmutables.sol";
 import {V3ToV4Migrator} from "../modules/V3ToV4Migrator.sol";
-import {Callbacks} from "../base/Callbacks.sol";
 import {BytesLib} from "../libraries/BytesLib.sol";
 import {Commands} from "../libraries/Commands.sol";
 import {Lock} from "./Lock.sol";
@@ -17,6 +16,7 @@ import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol"
 import {IERC721Permit} from "pancake-v4-periphery/src/pool-cl/interfaces/IERC721Permit.sol";
 import {ActionConstants} from "pancake-v4-periphery/src/libraries/ActionConstants.sol";
 import {BaseActionsRouter} from "pancake-v4-periphery/src/base/BaseActionsRouter.sol";
+import {CalldataDecoder} from "pancake-v4-periphery/src/libraries/CalldataDecoder.sol";
 
 /// @title Decodes and Executes Commands
 /// @notice Called by the UniversalRouter contract to efficiently decode and execute a singular command
@@ -27,15 +27,26 @@ abstract contract Dispatcher is
     StableSwapRouter,
     V4SwapRouter,
     V3ToV4Migrator,
-    Callbacks,
     Lock
 {
     using BytesLib for bytes;
+    using CalldataDecoder for bytes;
 
     error InvalidCommandType(uint256 commandType);
     error BalanceTooLow();
     error InvalidAction(bytes4 action);
     error NotAuthorizedForToken(uint256 tokenId);
+
+    /// @notice Executes encoded commands along with provided inputs.
+    /// @param commands A set of concatenated commands, each 1 byte in length
+    /// @param inputs An array of byte strings containing abi encoded inputs for each command
+    function execute(bytes calldata commands, bytes[] calldata inputs) external payable virtual;
+
+    /// @notice Public view function to be used instead of msg.sender, as the contract performs self-reentrancy and at
+    /// times msg.sender == address(this). Instead msgSender() returns the initiator of the lock
+    function msgSender() public view override(BaseActionsRouter) returns (address) {
+        return _getLocker();
+    }
 
     /// @notice Decodes and executes the given command with the given inputs
     /// @param commandType The command type to execute
@@ -48,10 +59,12 @@ abstract contract Dispatcher is
 
         success = true;
 
-        if (command < Commands.FOURTH_IF_BOUNDARY) {
-            if (command < Commands.SECOND_IF_BOUNDARY) {
+        // 0x00 <= command < 0x21
+        if (command < Commands.EXECUTE_SUB_PLAN) {
+            // 0x00 <= command < 0x10
+            if (command < Commands.V4_SWAP) {
                 // 0x00 <= command < 0x08
-                if (command < Commands.FIRST_IF_BOUNDARY) {
+                if (command < Commands.V2_SWAP_EXACT_IN) {
                     if (command == Commands.V3_SWAP_EXACT_IN) {
                         // equivalent: abi.decode(inputs, (address, uint256, uint256, bytes, bool))
                         address recipient;
@@ -141,8 +154,8 @@ abstract contract Dispatcher is
                         // placeholder area for command 0x07
                         revert InvalidCommandType(command);
                     }
-                    // 0x08 <= command < 0x10
                 } else {
+                    // 0x08 <= command < 0x10
                     if (command == Commands.V2_SWAP_EXACT_IN) {
                         // equivalent: abi.decode(inputs, (address, uint256, uint256, bytes, bool))
                         address recipient;
@@ -226,8 +239,8 @@ abstract contract Dispatcher is
                         revert InvalidCommandType(command);
                     }
                 }
-                // 0x10 <= command < 0x18
             } else {
+                // 0x10 <= command < 0x21
                 if (command == Commands.V4_SWAP) {
                     // pass the calldata provided to V4SwapRouter._executeActions (defined in BaseActionsRouter)
                     _executeActions(inputs);
@@ -244,16 +257,19 @@ abstract contract Dispatcher is
                     (success, output) = address(V3_POSITION_MANAGER).call(inputs);
                 } else if (command == Commands.V3_POSITION_MANAGER_CALL) {
                     bytes4 selector;
-                    uint256 tokenId;
                     assembly {
                         selector := calldataload(inputs.offset)
+                    }
+                    if (!isValidAction(selector)) {
+                        revert InvalidAction(selector);
+                    }
+
+                    uint256 tokenId;
+                    assembly {
                         // tokenId is always the first parameter in the valid actions
                         tokenId := calldataload(add(inputs.offset, 0x04))
                     }
 
-                    if (!isValidAction(selector)) {
-                        revert InvalidAction(selector);
-                    }
                     // If any other address that is not the owner wants to call this function, it also needs to be approved (in addition to this contract)
                     // This can be done in 2 ways:
                     //    1. This contract is permitted for the specific token and the caller is approved for ALL of the owner's tokens
@@ -265,22 +281,21 @@ abstract contract Dispatcher is
                     (success, output) = address(V3_POSITION_MANAGER).call(inputs);
                 } else if (command == Commands.V4_CL_POSITION_CALL) {
                     // should only call modifyLiquidities() with Actions.CL_MINT_POSITION
-                    // do not permit or approve this contract over a v4 position or someone could use this command to decrease/burn your position
+                    // do not permit or approve this contract over a v4 position or someone could use this command to decrease, burn, or transfer your position
                     (success, output) = address(V4_CL_POSITION_MANAGER).call{value: address(this).balance}(inputs);
                 } else if (command == Commands.V4_BIN_POSITION_CALL) {
                     // should only call modifyLiquidities() with Actions.BIN_ADD_LIQUIDITY
-                    // do not permit or approve this contract over a v4 position or someone could use this command to decrease/burn your position
+                    // do not permit or approve this contract over a v4 position or someone could use this command to decrease, burn, or transfer your position
                     (success, output) = address(V4_BIN_POSITION_MANAGER).call{value: address(this).balance}(inputs);
                 } else {
-                    // placeholder area for command
+                    // placeholder area for commands 0x15-0x20
                     revert InvalidCommandType(command);
                 }
             }
-            // 0x20 <= command
         } else {
+            // 0x21 <= command
             if (command == Commands.EXECUTE_SUB_PLAN) {
-                bytes calldata _commands = inputs.toBytes(0);
-                bytes[] calldata _inputs = inputs.toBytesArray(1);
+                (bytes calldata _commands, bytes[] calldata _inputs) = inputs.decodeCommandsAndInputs();
                 (success, output) = (address(this)).call(abi.encodeCall(Dispatcher.execute, (_commands, _inputs)));
             } else if (command == Commands.STABLE_SWAP_EXACT_IN) {
                 // equivalent: abi.decode(inputs, (address, uint256, uint256, bytes, bytes, bool))
@@ -320,7 +335,7 @@ abstract contract Dispatcher is
                 uint256 amountIn = stableSwapExactOutputAmountIn(amountOut, amountInMax, path, flag);
                 stableSwapExactOutput(map(recipient), amountIn, amountOut, path, flag, payer);
             } else {
-                // placeholder area for commands 0x23-0x3f
+                // placeholder area for commands 0x24-0x3f
                 revert InvalidCommandType(command);
             }
         }
@@ -338,15 +353,4 @@ abstract contract Dispatcher is
             return recipient;
         }
     }
-
-    /// @notice Public view function to be used instead of msg.sender, as the contract performs self-reentrancy and at
-    /// times msg.sender == address(this). Instead msgSender() returns the initiator of the lock
-    function msgSender() public view override(BaseActionsRouter) returns (address) {
-        return _getLocker();
-    }
-
-    /// @notice Executes encoded commands along with provided inputs.
-    /// @param commands A set of concatenated commands, each 1 byte in length
-    /// @param inputs An array of byte strings containing abi encoded inputs for each command
-    function execute(bytes calldata commands, bytes[] calldata inputs) external payable virtual;
 }

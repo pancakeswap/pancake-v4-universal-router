@@ -17,7 +17,6 @@ import {Commands} from "../src/libraries/Commands.sol";
 import {MockERC20} from "./mock/MockERC20.sol";
 import {MockERC721} from "./mock/MockERC721.sol";
 import {MockERC1155} from "./mock/MockERC1155.sol";
-import {Callbacks} from "../src/base/Callbacks.sol";
 import {RouterParameters} from "../src/base/RouterImmutables.sol";
 
 contract UniversalRouterTest is Test, GasSnapshot {
@@ -30,7 +29,6 @@ contract UniversalRouterTest is Test, GasSnapshot {
     MockERC20 erc20;
     MockERC721 erc721;
     MockERC1155 erc1155;
-    Callbacks callbacks;
     WETH weth9 = new WETH();
 
     function setUp() public {
@@ -57,7 +55,6 @@ contract UniversalRouterTest is Test, GasSnapshot {
         erc20 = new MockERC20();
         erc721 = new MockERC721();
         erc1155 = new MockERC1155();
-        callbacks = new Callbacks();
     }
 
     function test_bytecodeSize() public {
@@ -122,11 +119,6 @@ contract UniversalRouterTest is Test, GasSnapshot {
 
         vm.expectRevert(Payments.InsufficientETH.selector);
         router.execute(commands, inputs);
-    }
-
-    function test_supportsInterface() public {
-        bool supportsERC165 = router.supportsInterface(type(IERC165).interfaceId);
-        assertEq(supportsERC165, true);
     }
 
     function test_receive_onlyWeth9() public {
