@@ -120,6 +120,7 @@ abstract contract Dispatcher is
                         }
                         bytes calldata data = inputs.toBytes(1);
                         PERMIT2.permit(msgSender(), permitBatch, data);
+                        return (success, output);
                     } else if (command == Commands.SWEEP) {
                         // equivalent:  abi.decode(inputs, (address, address, uint256))
                         address token;
