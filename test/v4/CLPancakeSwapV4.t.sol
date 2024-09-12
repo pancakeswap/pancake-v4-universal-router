@@ -22,7 +22,6 @@ import {ActionConstants} from "pancake-v4-periphery/src/libraries/ActionConstant
 import {Plan, Planner} from "pancake-v4-periphery/src/libraries/Planner.sol";
 import {CLPositionManager} from "pancake-v4-periphery/src/pool-cl/CLPositionManager.sol";
 import {Actions} from "pancake-v4-periphery/src/libraries/Actions.sol";
-import {PositionConfig} from "pancake-v4-periphery/src/pool-cl/libraries/PositionConfig.sol";
 import {ICLRouterBase} from "pancake-v4-periphery/src/pool-cl/interfaces/ICLRouterBase.sol";
 import {LiquidityAmounts} from "pancake-v4-periphery/src/pool-cl/libraries/LiquidityAmounts.sol";
 import {PathKey} from "pancake-v4-periphery/src/libraries/PathKey.sol";
@@ -57,7 +56,7 @@ contract CLPancakeSwapV4Test is BasePancakeSwapV4 {
 
     function setUp() public {
         vault = IVault(new Vault());
-        poolManager = new CLPoolManager(vault, 3000);
+        poolManager = new CLPoolManager(vault);
         vault.registerApp(address(poolManager));
         permit2 = IAllowanceTransfer(deployPermit2());
 
@@ -338,14 +337,13 @@ contract CLPancakeSwapV4Test is BasePancakeSwapV4 {
         uint256 liquidity =
             LiquidityAmounts.getLiquidityForAmounts(SQRT_PRICE_1_1, sqrtRatioAX96, sqrtRatioBX96, 10 ether, 10 ether); // around 1671 e18 liquidity
 
-        PositionConfig memory config = PositionConfig({poolKey: key, tickLower: tickLower, tickUpper: tickUpper});
         Plan memory mintPlan = Planner.init();
         mintPlan.add(
             Actions.CL_MINT_POSITION,
-            abi.encode(config, liquidity, type(uint128).max, type(uint128).max, address(this), "")
+            abi.encode(key, tickLower, tickUpper, liquidity, type(uint128).max, type(uint128).max, address(this), "")
         );
 
-        bytes memory calls = mintPlan.finalizeModifyLiquidityWithClose(config.poolKey);
+        bytes memory calls = mintPlan.finalizeModifyLiquidityWithClose(key);
         positionManager.modifyLiquidities(calls, block.timestamp + 1);
     }
 }

@@ -52,7 +52,7 @@ contract BinNativePancakeSwapV4Test is BasePancakeSwapV4, BinLiquidityHelper {
 
     function setUp() public {
         vault = IVault(new Vault());
-        poolManager = new BinPoolManager(vault, 500000);
+        poolManager = new BinPoolManager(vault);
         vault.registerApp(address(poolManager));
         permit2 = IAllowanceTransfer(deployPermit2());
 
