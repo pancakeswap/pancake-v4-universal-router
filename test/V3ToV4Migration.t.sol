@@ -288,7 +288,6 @@ contract V3ToV4MigrationTest is BasePancakeSwapV4, OldVersionHelper, BinLiquidit
         token1.mint(address(router), 10 ether);
 
         // prep position manager action: mint/ settle/ settle
-        // PositionConfig memory positionConfig = PositionConfig({poolKey: clPoolKey, tickLower: -120, tickUpper: 120});
         Plan memory planner = Planner.init();
         planner.add(Actions.CL_MINT_POSITION, abi.encode(clPoolKey, -120, 120, 1 ether, 10 ether, 10 ether, alice, ""));
         planner.add(Actions.SETTLE, abi.encode(clPoolKey.currency0, ActionConstants.OPEN_DELTA, false)); // deduct from universal router
