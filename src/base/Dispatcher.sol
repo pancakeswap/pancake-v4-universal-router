@@ -81,6 +81,7 @@ abstract contract Dispatcher is
                         bytes calldata path = inputs.toBytes(3);
                         address payer = payerIsUser ? msgSender() : address(this);
                         v3SwapExactInput(map(recipient), amountIn, amountOutMin, path, payer);
+                        return (success, output);
                     } else if (command == Commands.V3_SWAP_EXACT_OUT) {
                         // equivalent: abi.decode(inputs, (address, uint256, uint256, bytes, bool))
                         address recipient;
@@ -97,6 +98,7 @@ abstract contract Dispatcher is
                         bytes calldata path = inputs.toBytes(3);
                         address payer = payerIsUser ? msgSender() : address(this);
                         v3SwapExactOutput(map(recipient), amountOut, amountInMax, path, payer);
+                        return (success, output);
                     } else if (command == Commands.PERMIT2_TRANSFER_FROM) {
                         // equivalent: abi.decode(inputs, (address, address, uint160))
                         address token;
@@ -108,6 +110,7 @@ abstract contract Dispatcher is
                             amount := calldataload(add(inputs.offset, 0x40))
                         }
                         permit2TransferFrom(token, msgSender(), map(recipient), amount);
+                        return (success, output);
                     } else if (command == Commands.PERMIT2_PERMIT_BATCH) {
                         IAllowanceTransfer.PermitBatch calldata permitBatch;
                         assembly {
@@ -116,7 +119,12 @@ abstract contract Dispatcher is
                             permitBatch := add(inputs.offset, calldataload(inputs.offset))
                         }
                         bytes calldata data = inputs.toBytes(1);
-                        PERMIT2.permit(msgSender(), permitBatch, data);
+                        try PERMIT2.permit(msgSender(), permitBatch, data) {}
+                        catch (bytes memory reason) {
+                            output = reason;
+                            success = false;
+                        }
+                        return (success, output);
                     } else if (command == Commands.SWEEP) {
                         // equivalent:  abi.decode(inputs, (address, address, uint256))
                         address token;
@@ -128,6 +136,7 @@ abstract contract Dispatcher is
                             amountMin := calldataload(add(inputs.offset, 0x40))
                         }
                         Payments.sweep(token, map(recipient), amountMin);
+                        return (success, output);
                     } else if (command == Commands.TRANSFER) {
                         // equivalent:  abi.decode(inputs, (address, address, uint256))
                         address token;
@@ -139,6 +148,7 @@ abstract contract Dispatcher is
                             value := calldataload(add(inputs.offset, 0x40))
                         }
                         Payments.pay(token, map(recipient), value);
+                        return (success, output);
                     } else if (command == Commands.PAY_PORTION) {
                         // equivalent:  abi.decode(inputs, (address, address, uint256))
                         address token;
@@ -150,6 +160,7 @@ abstract contract Dispatcher is
                             bips := calldataload(add(inputs.offset, 0x40))
                         }
                         Payments.payPortion(token, map(recipient), bips);
+                        return (success, output);
                     } else {
                         // placeholder area for command 0x07
                         revert InvalidCommandType(command);
@@ -172,6 +183,7 @@ abstract contract Dispatcher is
                         address[] calldata path = inputs.toAddressArray(3);
                         address payer = payerIsUser ? msgSender() : address(this);
                         v2SwapExactInput(map(recipient), amountIn, amountOutMin, path, payer);
+                        return (success, output);
                     } else if (command == Commands.V2_SWAP_EXACT_OUT) {
                         // equivalent: abi.decode(inputs, (address, uint256, uint256, bytes, bool))
                         address recipient;
@@ -188,6 +200,7 @@ abstract contract Dispatcher is
                         address[] calldata path = inputs.toAddressArray(3);
                         address payer = payerIsUser ? msgSender() : address(this);
                         v2SwapExactOutput(map(recipient), amountOut, amountInMax, path, payer);
+                        return (success, output);
                     } else if (command == Commands.PERMIT2_PERMIT) {
                         // equivalent: abi.decode(inputs, (IAllowanceTransfer.PermitSingle, bytes))
                         IAllowanceTransfer.PermitSingle calldata permitSingle;
@@ -195,7 +208,12 @@ abstract contract Dispatcher is
                             permitSingle := inputs.offset
                         }
                         bytes calldata data = inputs.toBytes(6); // PermitSingle takes first 6 slots (0..5)
-                        PERMIT2.permit(msgSender(), permitSingle, data);
+                        try PERMIT2.permit(msgSender(), permitSingle, data) {}
+                        catch (bytes memory reason) {
+                            output = reason;
+                            success = false;
+                        }
+                        return (success, output);
                     } else if (command == Commands.WRAP_ETH) {
                         // equivalent: abi.decode(inputs, (address, uint256))
                         address recipient;
@@ -205,6 +223,7 @@ abstract contract Dispatcher is
                             amount := calldataload(add(inputs.offset, 0x20))
                         }
                         Payments.wrapETH(map(recipient), amount);
+                        return (success, output);
                     } else if (command == Commands.UNWRAP_WETH) {
                         // equivalent: abi.decode(inputs, (address, uint256))
                         address recipient;
@@ -214,6 +233,7 @@ abstract contract Dispatcher is
                             amountMin := calldataload(add(inputs.offset, 0x20))
                         }
                         Payments.unwrapWETH9(map(recipient), amountMin);
+                        return (success, output);
                     } else if (command == Commands.PERMIT2_TRANSFER_FROM_BATCH) {
                         IAllowanceTransfer.AllowanceTransferDetails[] calldata batchDetails;
                         (uint256 length, uint256 offset) = inputs.toLengthOffset(0);
@@ -222,6 +242,7 @@ abstract contract Dispatcher is
                             batchDetails.offset := offset
                         }
                         permit2TransferFrom(batchDetails, msgSender());
+                        return (success, output);
                     } else if (command == Commands.BALANCE_CHECK_ERC20) {
                         // equivalent: abi.decode(inputs, (address, address, uint256))
                         address owner;
@@ -234,6 +255,7 @@ abstract contract Dispatcher is
                         }
                         success = (ERC20(token).balanceOf(owner) >= minBalance);
                         if (!success) output = abi.encodePacked(BalanceTooLow.selector);
+                        return (success, output);
                     } else {
                         // placeholder area for command 0x0f
                         revert InvalidCommandType(command);
@@ -244,6 +266,7 @@ abstract contract Dispatcher is
                 if (command == Commands.V4_SWAP) {
                     // pass the calldata provided to V4SwapRouter._executeActions (defined in BaseActionsRouter)
                     _executeActions(inputs);
+                    return (success, output);
                     // This contract MUST be approved to spend the token since its going to be doing the call on the position manager
                 } else if (command == Commands.V3_POSITION_MANAGER_PERMIT) {
                     bytes4 selector;
@@ -255,6 +278,7 @@ abstract contract Dispatcher is
                     }
 
                     (success, output) = address(V3_POSITION_MANAGER).call(inputs);
+                    return (success, output);
                 } else if (command == Commands.V3_POSITION_MANAGER_CALL) {
                     bytes4 selector;
                     assembly {
@@ -279,14 +303,17 @@ abstract contract Dispatcher is
                     }
 
                     (success, output) = address(V3_POSITION_MANAGER).call(inputs);
+                    return (success, output);
                 } else if (command == Commands.V4_CL_POSITION_CALL) {
                     // should only call modifyLiquidities() with Actions.CL_MINT_POSITION
                     // do not permit or approve this contract over a v4 position or someone could use this command to decrease, burn, or transfer your position
                     (success, output) = address(V4_CL_POSITION_MANAGER).call{value: address(this).balance}(inputs);
+                    return (success, output);
                 } else if (command == Commands.V4_BIN_POSITION_CALL) {
                     // should only call modifyLiquidities() with Actions.BIN_ADD_LIQUIDITY
                     // do not permit or approve this contract over a v4 position or someone could use this command to decrease, burn, or transfer your position
                     (success, output) = address(V4_BIN_POSITION_MANAGER).call{value: address(this).balance}(inputs);
+                    return (success, output);
                 } else {
                     // placeholder area for commands 0x15-0x20
                     revert InvalidCommandType(command);
@@ -297,6 +324,7 @@ abstract contract Dispatcher is
             if (command == Commands.EXECUTE_SUB_PLAN) {
                 (bytes calldata _commands, bytes[] calldata _inputs) = inputs.decodeCommandsAndInputs();
                 (success, output) = (address(this)).call(abi.encodeCall(Dispatcher.execute, (_commands, _inputs)));
+                return (success, output);
             } else if (command == Commands.STABLE_SWAP_EXACT_IN) {
                 // equivalent: abi.decode(inputs, (address, uint256, uint256, bytes, bytes, bool))
                 address recipient;
@@ -314,6 +342,7 @@ abstract contract Dispatcher is
                 uint256[] calldata flag = inputs.toUintArray(4);
                 address payer = payerIsUser ? msgSender() : address(this);
                 stableSwapExactInput(map(recipient), amountIn, amountOutMin, path, flag, payer);
+                return (success, output);
             } else if (command == Commands.STABLE_SWAP_EXACT_OUT) {
                 // equivalent: abi.decode(inputs, (address, uint256, uint256, bytes, bytes, bool))
                 address recipient;
@@ -334,6 +363,7 @@ abstract contract Dispatcher is
                 /// @dev structured this way as stack too deep by Yul
                 uint256 amountIn = stableSwapExactOutputAmountIn(amountOut, amountInMax, path, flag);
                 stableSwapExactOutput(map(recipient), amountIn, amountOut, path, flag, payer);
+                return (success, output);
             } else {
                 // placeholder area for commands 0x24-0x3f
                 revert InvalidCommandType(command);
