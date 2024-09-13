@@ -161,10 +161,8 @@ abstract contract Dispatcher is
                         }
                         Payments.payPortion(token, map(recipient), bips);
                         return (success, output);
-                    } else {
-                        // placeholder area for command 0x07
-                        revert InvalidCommandType(command);
                     }
+                    // placeholder area for command 0x07
                 } else {
                     // 0x08 <= command < 0x10
                     if (command == Commands.V2_SWAP_EXACT_IN) {
@@ -256,10 +254,8 @@ abstract contract Dispatcher is
                         success = (ERC20(token).balanceOf(owner) >= minBalance);
                         if (!success) output = abi.encodePacked(BalanceTooLow.selector);
                         return (success, output);
-                    } else {
-                        // placeholder area for command 0x0f
-                        revert InvalidCommandType(command);
                     }
+                    // placeholder area for command 0x0f
                 }
             } else {
                 // 0x10 <= command < 0x21
@@ -314,10 +310,8 @@ abstract contract Dispatcher is
                     // do not permit or approve this contract over a v4 position or someone could use this command to decrease, burn, or transfer your position
                     (success, output) = address(V4_BIN_POSITION_MANAGER).call{value: address(this).balance}(inputs);
                     return (success, output);
-                } else {
-                    // placeholder area for commands 0x15-0x20
-                    revert InvalidCommandType(command);
                 }
+                // placeholder area for commands 0x15-0x20
             }
         } else {
             // 0x21 <= command
@@ -364,11 +358,10 @@ abstract contract Dispatcher is
                 uint256 amountIn = stableSwapExactOutputAmountIn(amountOut, amountInMax, path, flag);
                 stableSwapExactOutput(map(recipient), amountIn, amountOut, path, flag, payer);
                 return (success, output);
-            } else {
-                // placeholder area for commands 0x24-0x3f
-                revert InvalidCommandType(command);
             }
+            // placeholder area for commands 0x24-0x3f
         }
+        revert InvalidCommandType(command);
     }
 
     /// @notice Calculates the recipient address for a command
