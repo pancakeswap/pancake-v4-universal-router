@@ -24,7 +24,6 @@ import {Plan, Planner} from "pancake-v4-periphery/src/libraries/Planner.sol";
 import {CLPositionManager} from "pancake-v4-periphery/src/pool-cl/CLPositionManager.sol";
 import {BinPositionManager} from "pancake-v4-periphery/src/pool-bin/BinPositionManager.sol";
 import {Actions} from "pancake-v4-periphery/src/libraries/Actions.sol";
-import {PositionConfig} from "pancake-v4-periphery/src/pool-cl/libraries/PositionConfig.sol";
 import {IV3NonfungiblePositionManager} from
     "pancake-v4-periphery/src/interfaces/external/IV3NonfungiblePositionManager.sol";
 import {IERC721Permit} from "pancake-v4-periphery/src/pool-cl/interfaces/IERC721Permit.sol";
@@ -114,8 +113,8 @@ contract V3ToV4MigrationTest is BasePancakeSwapV4, OldVersionHelper, BinLiquidit
         //////////// v4 setup /////////////
         ///////////////////////////////////
         vault = IVault(new Vault());
-        binPoolManager = new BinPoolManager(vault, 500000);
-        clPoolManager = new CLPoolManager(vault, 3000);
+        binPoolManager = new BinPoolManager(vault);
+        clPoolManager = new CLPoolManager(vault);
         vault.registerApp(address(binPoolManager));
         vault.registerApp(address(clPoolManager));
 
@@ -289,9 +288,8 @@ contract V3ToV4MigrationTest is BasePancakeSwapV4, OldVersionHelper, BinLiquidit
         token1.mint(address(router), 10 ether);
 
         // prep position manager action: mint/ settle/ settle
-        PositionConfig memory positionConfig = PositionConfig({poolKey: clPoolKey, tickLower: -120, tickUpper: 120});
         Plan memory planner = Planner.init();
-        planner.add(Actions.CL_MINT_POSITION, abi.encode(positionConfig, 1 ether, 10 ether, 10 ether, alice, ""));
+        planner.add(Actions.CL_MINT_POSITION, abi.encode(clPoolKey, -120, 120, 1 ether, 10 ether, 10 ether, alice, ""));
         planner.add(Actions.SETTLE, abi.encode(clPoolKey.currency0, ActionConstants.OPEN_DELTA, false)); // deduct from universal router
         planner.add(Actions.SETTLE, abi.encode(clPoolKey.currency1, ActionConstants.OPEN_DELTA, false)); // deduct from universal router
         planner.add(Actions.SWEEP, abi.encode(clPoolKey.currency0, alice));
