@@ -7,7 +7,7 @@ import {IV3NonfungiblePositionManager} from
 import {CalldataDecoder} from "pancake-v4-periphery/src/libraries/CalldataDecoder.sol";
 import {Actions} from "pancake-v4-periphery/src/libraries/Actions.sol";
 import {Multicall} from "@openzeppelin/contracts/utils/Multicall.sol";
-import {console2} from "forge-std/console2.sol";
+import {IPositionManager} from "pancake-v4-periphery/src/interfaces/IPositionManager.sol";
 
 /// @title V3 to V4 Migrator
 /// @notice A contract that migrates liquidity from PancakeSwap V3 to V4
@@ -30,21 +30,30 @@ abstract contract V3ToV4Migrator is RouterImmutables {
 
     function containInValidV4AClActions(bytes calldata inputs) internal pure returns (bool isInvalid, uint256 action) {
         // Decode the data of modifyLiquidities(bytes calldata payload, uint256 deadline)
-        bytes4 selector = bytes4(inputs[:4]);
-        bytes calldata data = inputs[4:];
-        (bytes memory payload, uint256 deadline) = abi.decode(data, (bytes, uint256));
+        bytes4 selector = bytes4(inputs[:4]); // todo:
 
-        // decde payload to get bytes calldata actions, bytes[] calldata params
-        (bytes memory actions,) = abi.decode(payload, (bytes, bytes[]));
+        if (selector == IPositionManager.modifyLiquidities.selector) {
+            bytes calldata data = inputs[4:];
 
-        for (uint256 actionIndex = 0; actionIndex < actions.length; actionIndex++) {
-            action = uint8(actions[actionIndex]);
-            if (
-                action == Actions.CL_INCREASE_LIQUIDITY || action == Actions.CL_DECREASE_LIQUIDITY
-                    || action == Actions.CL_BURN_POSITION
-            ) {
-                return (true, action);
+            // decode payload to get bytes calldata actions, bytes[] calldata params
+            (bytes memory payload,) = abi.decode(data, (bytes, uint256));
+            (bytes memory actions,) = abi.decode(payload, (bytes, bytes[]));
+
+            for (uint256 actionIndex = 0; actionIndex < actions.length; actionIndex++) {
+                action = uint8(actions[actionIndex]);
+                if (
+                    action == Actions.CL_INCREASE_LIQUIDITY || action == Actions.CL_DECREASE_LIQUIDITY
+                        || action == Actions.CL_BURN_POSITION
+                ) {
+                    return (true, action);
+                }
             }
+        } else if (selector == IPositionManager.modifyLiquiditiesWithoutLock.selector) {
+            // todo:
+        } else if (selector == Multicall.multicall.selector) {
+            // todo:
         }
+
+        // todo: revert InvalidSelector
     }
 }
