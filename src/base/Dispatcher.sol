@@ -35,6 +35,7 @@ abstract contract Dispatcher is
     error InvalidCommandType(uint256 commandType);
     error BalanceTooLow();
     error InvalidAction(bytes4 action);
+    error InvalidPositionManagerAction(uint256 action);
     error NotAuthorizedForToken(uint256 tokenId);
 
     /// @notice Executes encoded commands along with provided inputs.
@@ -305,8 +306,13 @@ abstract contract Dispatcher is
                     (success, output) = address(V3_POSITION_MANAGER).call(inputs);
                     return (success, output);
                 } else if (command == Commands.V4_CL_POSITION_CALL) {
-                    // should only call modifyLiquidities() with Actions.CL_MINT_POSITION
-                    // do not permit or approve this contract over a v4 position or someone could use this command to decrease, burn, or transfer your position
+                    // Only modifyLiquidities() with Actions.CL_MINT_POSITION and SETTLEMENT related option are allowed
+                    // CL_INCREASE_LIQUIDITY, CL_DECREASE_LIQUIDITY and CL_BURN_POSITION are blocked
+                    (bool isInvalid, uint256 action) = containInValidV4AClActions(inputs);
+                    if (isInvalid) {
+                        revert InvalidPositionManagerAction(action);
+                    }
+
                     (success, output) = address(V4_CL_POSITION_MANAGER).call{value: address(this).balance}(inputs);
                     return (success, output);
                 } else if (command == Commands.V4_BIN_POSITION_CALL) {
