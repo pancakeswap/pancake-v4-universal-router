@@ -9,11 +9,11 @@ import {Constants} from "../../libraries/Constants.sol";
 import {UniversalRouterHelper} from "../../libraries/UniversalRouterHelper.sol";
 import {ERC20} from "solmate/src/tokens/ERC20.sol";
 import {SafeTransferLib} from "solmate/src/utils/SafeTransferLib.sol";
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {Ownable, Ownable2Step} from "@openzeppelin/contracts/access/Ownable2Step.sol";
 import {IStableSwap} from "../../interfaces/IStableSwap.sol";
 
 /// @title Router for PancakeSwap Stable Trades
-abstract contract StableSwapRouter is RouterImmutables, Permit2Payments, Ownable {
+abstract contract StableSwapRouter is RouterImmutables, Permit2Payments, Ownable2Step {
     using SafeTransferLib for ERC20;
     using UniversalRouterHelper for address;
 

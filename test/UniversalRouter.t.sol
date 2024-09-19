@@ -57,6 +57,7 @@ contract UniversalRouterTest is Test, GasSnapshot, Permit2SignatureHelpers, Depl
             v4BinPositionManager: address(0)
         });
         router = new UniversalRouter(params);
+        assertEq(router.owner(), address(this));
 
         router = new UniversalRouter(params);
         erc20 = new MockERC20();
@@ -79,6 +80,20 @@ contract UniversalRouterTest is Test, GasSnapshot, Permit2SignatureHelpers, Depl
             bytecodeSize := extcodesize(theRouter)
         }
         emit log_uint(bytecodeSize);
+    }
+
+    function test_Owner_TransferOwnership() public {
+        address alice = makeAddr("alice");
+        assertEq(router.owner(), address(this));
+
+        router.transferOwnership(alice);
+        assertEq(router.owner(), address(this));
+        assertEq(router.pendingOwner(), alice);
+
+        vm.prank(alice);
+        router.acceptOwnership();
+        assertEq(router.owner(), alice);
+        assertEq(router.pendingOwner(), address(0));
     }
 
     function test_sweep_token() public {
