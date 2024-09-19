@@ -316,6 +316,30 @@ contract V3ToV4MigrationTest is BasePancakeSwapV4, OldVersionHelper, BinLiquidit
         assertEq(clPositionManager.ownerOf(1), alice);
     }
 
+    function test_v4CLPositionmanager_InvalidActions() public {
+        uint256[] memory blackListedActions = new uint256[](3);
+        blackListedActions[0] = Actions.CL_INCREASE_LIQUIDITY;
+        blackListedActions[1] = Actions.CL_DECREASE_LIQUIDITY;
+        blackListedActions[2] = Actions.CL_BURN_POSITION;
+
+        for (uint256 i = 0; i < blackListedActions.length; i++) {
+            Plan memory planner = Planner.init();
+            planner.add(Actions.CL_INCREASE_LIQUIDITY, abi.encode(10));
+
+            bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.V4_CL_POSITION_CALL)));
+            bytes[] memory inputs = new bytes[](1);
+            inputs[0] = abi.encodePacked(
+                IPositionManager.modifyLiquidities.selector, abi.encode(planner.encode(), block.timestamp)
+            );
+
+            vm.expectRevert(
+                abi.encodeWithSelector(Dispatcher.InvalidPositionManagerAction.selector, Actions.CL_INCREASE_LIQUIDITY)
+            );
+            vm.prank(alice);
+            router.execute(commands, inputs);
+        }
+    }
+
     /// @dev Assume token0/token1 is aready in universal router from earlier steps on v3
     ///      then add liquidity to v4 cl and sweep remaining token
     function test_v4BinPositionmanager_BinAddLiquidity() public {
