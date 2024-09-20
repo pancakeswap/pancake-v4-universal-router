@@ -12,6 +12,8 @@ import {DeployPermit2} from "permit2/test/utils/DeployPermit2.sol";
 import {StructBuilder} from "permit2/test/utils/StructBuilder.sol";
 import {AddressBuilder} from "permit2/test/utils/AddressBuilder.sol";
 import {WETH} from "solmate/src/tokens/WETH.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {Pausable} from "@openzeppelin/contracts/utils/Pausable.sol";
 
 import {UniversalRouter} from "../src/UniversalRouter.sol";
 import {Dispatcher} from "../src/base/Dispatcher.sol";
@@ -638,5 +640,35 @@ contract UniversalRouterTest is Test, GasSnapshot, Permit2SignatureHelpers, Depl
 
         vm.expectRevert(abi.encodeWithSelector(Dispatcher.InvalidCommandType.selector, command));
         router.execute(commands, inputs);
+    }
+
+    function test_PauseUnpause_OnlyOwner() public {
+        // Random user
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, bob));
+        vm.prank(bob);
+        router.pause();
+
+        // Owner
+        assertEq(router.paused(), false);
+
+        router.pause();
+        assertEq(router.paused(), true);
+
+        router.unpause();
+        assertEq(router.paused(), false);
+    }
+
+    function test_Pause_NoExecute() public {
+        router.pause();
+
+        bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.WRAP_ETH)));
+        bytes[] memory inputs = new bytes[](1);
+        inputs[0] = abi.encode(ActionConstants.ADDRESS_THIS, ActionConstants.CONTRACT_BALANCE);
+
+        vm.expectRevert(Pausable.EnforcedPause.selector);
+        router.execute{value: 1 ether}(commands, inputs);
+
+        vm.expectRevert(Pausable.EnforcedPause.selector);
+        router.execute{value: 1 ether}(commands, inputs, block.timestamp + 1);
     }
 }
