@@ -5,6 +5,7 @@ import {Test, console} from "forge-std/Test.sol";
 import {GasSnapshot} from "forge-gas-snapshot/GasSnapshot.sol";
 import {ERC20} from "solmate/src/tokens/ERC20.sol";
 import {ActionConstants} from "pancake-v4-periphery/src/libraries/ActionConstants.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 import {IPermit2} from "permit2/src/interfaces/IPermit2.sol";
 import {UniversalRouter} from "../../src/UniversalRouter.sol";
@@ -13,6 +14,7 @@ import {Commands} from "../../src/libraries/Commands.sol";
 import {RouterParameters} from "../../src/base/RouterImmutables.sol";
 import {IStableSwapFactory} from "../../src/interfaces/IStableSwapFactory.sol";
 import {IStableSwapInfo} from "../../src/interfaces/IStableSwapInfo.sol";
+import {StableSwapRouter} from "../../src/modules/pancakeswap/StableSwapRouter.sol";
 
 abstract contract StableSwapTest is Test, GasSnapshot {
     address constant RECIPIENT = address(10);
@@ -65,6 +67,48 @@ abstract contract StableSwapTest is Test, GasSnapshot {
         ERC20(token1()).approve(address(PERMIT2), type(uint256).max);
         PERMIT2.approve(token0(), address(router), type(uint160).max, type(uint48).max);
         PERMIT2.approve(token1(), address(router), type(uint160).max, type(uint48).max);
+    }
+
+    function test_SetStableSwap_OnlyOwner() public {
+        address bob = makeAddr("bob");
+        address newStableSwapFactory = makeAddr("newStableSwapFactory");
+        address newStableSwapInfo = makeAddr("newStableSwapInfo");
+
+        // random user cannot set
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, bob));
+        vm.startPrank(bob);
+        router.setStableSwap(newStableSwapFactory, newStableSwapInfo);
+        vm.stopPrank();
+
+        // owner can set - before
+        assertEq(router.stableSwapFactory(), address(STABLE_FACTORY));
+        assertEq(router.stableSwapInfo(), address(STABLE_INFO));
+
+        // owner can set
+        vm.prank(router.owner());
+        vm.expectEmit();
+        emit StableSwapRouter.SetStableSwap(newStableSwapFactory, newStableSwapInfo);
+        router.setStableSwap(newStableSwapFactory, newStableSwapInfo);
+
+        // owner can set - after
+        assertEq(router.stableSwapFactory(), newStableSwapFactory);
+        assertEq(router.stableSwapInfo(), newStableSwapInfo);
+    }
+
+    function test_SetStableSwap_EmptyAddress() public {
+        address newStableSwapFactory = makeAddr("newStableSwapFactory");
+        address newStableSwapInfo = makeAddr("newStableSwapInfo");
+        vm.startPrank(router.owner());
+
+        // set empty address for factory
+        vm.expectRevert();
+        router.setStableSwap(address(0), newStableSwapInfo);
+
+        // set empty address for info
+        vm.expectRevert();
+        router.setStableSwap(newStableSwapFactory, address(0));
+
+        vm.stopPrank();
     }
 
     function test_stableSwap_ExactInput0For1() public {
