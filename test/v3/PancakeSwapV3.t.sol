@@ -94,7 +94,7 @@ abstract contract PancakeSwapV3Test is Test, GasSnapshot {
     }
 
     function test_v3Swap_ExactInput0For1_ContractBalance() public {
-        // pre-req: ensure router has 1 ether 
+        // pre-req: ensure router has 1 ether
         deal(token0(), address(router), 1 ether);
         assertEq(ERC20(token0()).balanceOf(address(router)), 1 ether);
 
