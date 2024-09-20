@@ -105,7 +105,7 @@ abstract contract PancakeSwapV3Test is Test, GasSnapshot {
         inputs[0] = abi.encode(ActionConstants.MSG_SENDER, ActionConstants.CONTRACT_BALANCE, 0, path, true);
 
         router.execute(commands, inputs);
-        snapLastCall("PancakeSwapV3Test#test_v3Swap_ExactInput0For1");
+        snapLastCall("PancakeSwapV3Test#test_v3Swap_ExactInput0For1_ContractBalance");
         assertEq(ERC20(token0()).balanceOf(FROM), BALANCE - 1 ether);
         assertGt(ERC20(token1()).balanceOf(FROM), BALANCE);
     }
