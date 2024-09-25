@@ -9,9 +9,14 @@ import {ActionConstants} from "pancake-v4-periphery/src/libraries/ActionConstant
 import {Permit2SignatureHelpers} from "pancake-v4-periphery/test/shared/Permit2SignatureHelpers.sol";
 import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
 import {DeployPermit2} from "permit2/test/utils/DeployPermit2.sol";
+import {StructBuilder} from "permit2/test/utils/StructBuilder.sol";
+import {AddressBuilder} from "permit2/test/utils/AddressBuilder.sol";
 import {WETH} from "solmate/src/tokens/WETH.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {Pausable} from "@openzeppelin/contracts/utils/Pausable.sol";
 
 import {UniversalRouter} from "../src/UniversalRouter.sol";
+import {Dispatcher} from "../src/base/Dispatcher.sol";
 import {IUniversalRouter} from "../src/interfaces/IUniversalRouter.sol";
 import {Payments} from "../src/modules/Payments.sol";
 import {Constants} from "../src/libraries/Constants.sol";
@@ -22,11 +27,14 @@ import {MockERC1155} from "./mock/MockERC1155.sol";
 import {RouterParameters} from "../src/base/RouterImmutables.sol";
 
 contract UniversalRouterTest is Test, GasSnapshot, Permit2SignatureHelpers, DeployPermit2 {
+    using AddressBuilder for address[];
+
     error ContractSizeTooLarge(uint256 diff);
     error InvalidNonce();
 
     address RECIPIENT = makeAddr("alice");
     uint256 constant AMOUNT = 10 ** 18;
+    address bob = makeAddr("bob");
 
     UniversalRouter router;
     MockERC20 erc20;
@@ -146,7 +154,7 @@ contract UniversalRouterTest is Test, GasSnapshot, Permit2SignatureHelpers, Depl
 
     function test_receive_onlyWeth9() public {
         vm.expectRevert(IUniversalRouter.InvalidEthSender.selector);
-        (bool success,) = address(router).call{value: 1 ether}("");
+        address(router).call{value: 1 ether}("");
     }
 
     function test_wrapEth() public {
@@ -299,7 +307,6 @@ contract UniversalRouterTest is Test, GasSnapshot, Permit2SignatureHelpers, Depl
     /// @dev test showing that if permit command have ALLOW_REVERT flag and was front-run, the next command can still execute
     function test_permit2Single_frontrun() public {
         // pre-req
-        address bob = makeAddr("bob");
         (address charlie, uint256 charliePK) = makeAddrAndKey("charlie");
         uint160 permitAmount = type(uint160).max;
         uint48 permitExpiration = uint48(block.timestamp + 10e18);
@@ -356,7 +363,6 @@ contract UniversalRouterTest is Test, GasSnapshot, Permit2SignatureHelpers, Depl
     /// @dev test showing that if permit command have ALLOW_REVERT flag and was front-run, the next command can still execute
     function test_permit2Batch_frontrun() public {
         // pre-req
-        address bob = makeAddr("bob");
         (address charlie, uint256 charliePK) = makeAddrAndKey("charlie");
         uint160 permitAmount = type(uint160).max;
         uint48 permitExpiration = uint48(block.timestamp + 10e18);
@@ -414,5 +420,255 @@ contract UniversalRouterTest is Test, GasSnapshot, Permit2SignatureHelpers, Depl
 
         // after
         assertEq(weth9.balanceOf(address(router)), 1 ether);
+    }
+
+    function test_Permit2TransferFrom() public {
+        // pre-req: bob approve router to spend erc20
+        vm.startPrank(bob);
+        erc20.approve(address(permit2), type(uint256).max);
+        permit2.approve(address(erc20), address(router), type(uint160).max, type(uint48).max);
+        vm.stopPrank();
+
+        // before
+        address alice = makeAddr("alice");
+        erc20.mint(bob, 100 ether);
+        assertEq(erc20.balanceOf(bob), 100 ether);
+        assertEq(erc20.balanceOf(alice), 0 ether);
+
+        // execute
+        bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.PERMIT2_TRANSFER_FROM)));
+        bytes[] memory inputs = new bytes[](1);
+        inputs[0] = abi.encode(address(erc20), alice, 10 ether);
+        vm.prank(bob);
+        router.execute(commands, inputs);
+
+        // after verify
+        assertEq(erc20.balanceOf(bob), 90 ether);
+        assertEq(erc20.balanceOf(alice), 10 ether);
+    }
+
+    function test_Permit2TransferFromBatch() public {
+        // pre-req: bob approve router to spend erc20
+        vm.startPrank(bob);
+        erc20.approve(address(permit2), type(uint256).max);
+        erc20_2.approve(address(permit2), type(uint256).max);
+        permit2.approve(address(erc20), address(router), type(uint160).max, type(uint48).max);
+        permit2.approve(address(erc20_2), address(router), type(uint160).max, type(uint48).max);
+        vm.stopPrank();
+
+        // before
+        address alice = makeAddr("alice");
+        erc20.mint(bob, 100 ether);
+        erc20_2.mint(bob, 25 ether);
+        assertEq(erc20.balanceOf(bob), 100 ether);
+        assertEq(erc20_2.balanceOf(bob), 25 ether);
+        assertEq(erc20.balanceOf(alice), 0 ether);
+        assertEq(erc20_2.balanceOf(alice), 0 ether);
+
+        // execute 10 eth transfer of erc20 and erc20_2
+        address[] memory tokens = AddressBuilder.fill(1, address(erc20)).push(address(erc20_2));
+        address[] memory owner = AddressBuilder.fill(1, bob).push(bob);
+        IAllowanceTransfer.AllowanceTransferDetails[] memory transferDetails =
+            StructBuilder.fillAllowanceTransferDetail(2, tokens, 10 ether, alice, owner);
+        bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.PERMIT2_TRANSFER_FROM_BATCH)));
+        bytes[] memory inputs = new bytes[](1);
+        inputs[0] = abi.encode(transferDetails);
+        vm.prank(bob);
+        router.execute(commands, inputs);
+
+        // after verify
+        assertEq(erc20.balanceOf(bob), 90 ether);
+        assertEq(erc20_2.balanceOf(bob), 15 ether);
+        assertEq(erc20.balanceOf(alice), 10 ether);
+        assertEq(erc20_2.balanceOf(alice), 10 ether);
+    }
+
+    function test_Transfer_ETH() public {
+        // pre-req:
+        vm.deal(address(router), 1 ether);
+
+        // before
+        assertEq(bob.balance, 0 ether);
+        assertEq(address(router).balance, 1 ether);
+
+        // transfer token from router
+        bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.TRANSFER)));
+        bytes[] memory inputs = new bytes[](1);
+        inputs[0] = abi.encode(Constants.ETH, bob, 0.5 ether);
+        vm.prank(bob);
+        router.execute(commands, inputs);
+
+        // after
+        assertEq(bob.balance, 0.5 ether);
+        assertEq(address(router).balance, 0.5 ether);
+    }
+
+    function test_Transfer_ContractBalance() public {
+        erc20.mint(address(router), 1 ether);
+
+        // before
+        assertEq(erc20.balanceOf(bob), 0 ether);
+        assertEq(erc20.balanceOf(address(router)), 1 ether);
+
+        // transfer token from router
+        bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.TRANSFER)));
+        bytes[] memory inputs = new bytes[](1);
+        inputs[0] = abi.encode(address(erc20), bob, ActionConstants.CONTRACT_BALANCE);
+        vm.prank(bob);
+        router.execute(commands, inputs);
+
+        // after
+        assertEq(erc20.balanceOf(bob), 1 ether);
+        assertEq(erc20.balanceOf(address(router)), 0 ether);
+    }
+
+    function test_Transfer_SpecifiedAmount() public {
+        erc20.mint(address(router), 1 ether);
+
+        // before
+        assertEq(erc20.balanceOf(bob), 0 ether);
+        assertEq(erc20.balanceOf(address(router)), 1 ether);
+
+        // transfer token from router
+        bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.TRANSFER)));
+        bytes[] memory inputs = new bytes[](1);
+        inputs[0] = abi.encode(address(erc20), bob, 0.5 ether);
+        vm.prank(bob);
+        router.execute(commands, inputs);
+
+        // after
+        assertEq(erc20.balanceOf(bob), 0.5 ether);
+        assertEq(erc20.balanceOf(address(router)), 0.5 ether);
+    }
+
+    function test_PayPortion_ETH() public {
+        // pre-req:
+        vm.deal(address(router), 1 ether);
+
+        // before
+        assertEq(bob.balance, 0 ether);
+        assertEq(address(router).balance, 1 ether);
+
+        // transfer token from router
+        bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.PAY_PORTION)));
+        bytes[] memory inputs = new bytes[](1);
+        inputs[0] = abi.encode(Constants.ETH, bob, 1_000); // 1_000 bips = 10%
+        vm.prank(bob);
+        router.execute(commands, inputs);
+
+        // after
+        assertEq(bob.balance, 0.1 ether);
+        assertEq(address(router).balance, 0.9 ether);
+    }
+
+    function test_PayPortion_Erc20() public {
+        erc20.mint(address(router), 1 ether);
+
+        // before
+        assertEq(erc20.balanceOf(bob), 0 ether);
+        assertEq(erc20.balanceOf(address(router)), 1 ether);
+
+        // transfer token from router
+        bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.PAY_PORTION)));
+        bytes[] memory inputs = new bytes[](1);
+        inputs[0] = abi.encode(address(erc20), bob, 1_000); // 1_000 bips = 10%
+        vm.prank(bob);
+        router.execute(commands, inputs);
+
+        // after
+        assertEq(erc20.balanceOf(bob), 0.1 ether);
+        assertEq(erc20.balanceOf(address(router)), 0.9 ether);
+    }
+
+    function test_BalanceCheckErc20_Failed() public {
+        erc20.mint(address(bob), 1 ether);
+
+        // check balance
+        bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.BALANCE_CHECK_ERC20)));
+        bytes[] memory inputs = new bytes[](1);
+        inputs[0] = abi.encode(bob, address(erc20), 2 ether); // bob only have 1 ether
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IUniversalRouter.ExecutionFailed.selector, 0, abi.encodePacked(Dispatcher.BalanceTooLow.selector)
+            )
+        );
+        router.execute(commands, inputs);
+    }
+
+    function test_BalanceCheckErc20_Success() public {
+        erc20.mint(address(bob), 1 ether);
+
+        // check balance
+        bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.BALANCE_CHECK_ERC20)));
+        bytes[] memory inputs = new bytes[](1);
+        inputs[0] = abi.encode(bob, address(erc20), 1 ether);
+
+        // no revert, success
+        router.execute(commands, inputs);
+    }
+
+    function test_ExecuteSubPlan_WrapEth() public {
+        // prepare subCommand and subInputs
+        bytes memory subCommand = abi.encodePacked(bytes1(uint8(Commands.WRAP_ETH)));
+        bytes[] memory subInputs = new bytes[](1);
+        subInputs[0] = abi.encode(ActionConstants.ADDRESS_THIS, ActionConstants.CONTRACT_BALANCE);
+
+        // prepare commands and inputs
+        bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.EXECUTE_SUB_PLAN)));
+        bytes[] memory inputs = new bytes[](1);
+        inputs[0] = abi.encode(subCommand, subInputs);
+
+        // assert and verify
+        assertEq(weth9.balanceOf(address(router)), 0 ether);
+        router.execute{value: 1 ether}(commands, inputs);
+        assertEq(weth9.balanceOf(address(router)), 1 ether);
+    }
+
+    function test_InvalidCommand(bytes1 commandType) public {
+        uint256 command = uint8(commandType & Commands.COMMAND_TYPE_MASK);
+
+        // if valid commands, return
+        if (command >= 0x00 && command <= 0x06) return;
+        if (command >= 0x08 && command <= 0x0e) return;
+        if (command >= 0x10 && command <= 0x14) return;
+        if (command >= 0x21 && command <= 0x23) return;
+
+        bytes memory commands = abi.encodePacked(bytes1(uint8(command)));
+        bytes[] memory inputs = new bytes[](1);
+        inputs[0] = abi.encode(bob); // random input
+
+        vm.expectRevert(abi.encodeWithSelector(Dispatcher.InvalidCommandType.selector, command));
+        router.execute(commands, inputs);
+    }
+
+    function test_PauseUnpause_OnlyOwner() public {
+        // Random user
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, bob));
+        vm.prank(bob);
+        router.pause();
+
+        // Owner
+        assertEq(router.paused(), false);
+
+        router.pause();
+        assertEq(router.paused(), true);
+
+        router.unpause();
+        assertEq(router.paused(), false);
+    }
+
+    function test_Pause_NoExecute() public {
+        router.pause();
+
+        bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.WRAP_ETH)));
+        bytes[] memory inputs = new bytes[](1);
+        inputs[0] = abi.encode(ActionConstants.ADDRESS_THIS, ActionConstants.CONTRACT_BALANCE);
+
+        vm.expectRevert(Pausable.EnforcedPause.selector);
+        router.execute{value: 1 ether}(commands, inputs);
+
+        vm.expectRevert(Pausable.EnforcedPause.selector);
+        router.execute{value: 1 ether}(commands, inputs, block.timestamp + 1);
     }
 }
