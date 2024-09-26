@@ -24,12 +24,12 @@ contract DeployBscTestnet is DeployUniversalRouter {
             v3InitCodeHash: 0x6ce8eb472fa82df5469c6ab6d485f17c3ad13c8cd7af59b3d4a8026c5ce0f7e2,
             stableFactory: 0xe6A00f8b819244e8Ab9Ea930e46449C2F20B6609,
             stableInfo: 0xe6A00f8b819244e8Ab9Ea930e46449C2F20B6609,
-            v4Vault: 0x08F012b8E2f3021db8bd2A896A7F422F4041F131,
-            v4ClPoolManager: 0x969D90aC74A1a5228b66440f8C8326a8dA47A5F9,
-            v4BinPoolManager: 0x437ef7C8C00d20a8535ae1786c5800c88413e7Af,
+            v4Vault: 0x0a125Bb36e409957Ed951eF1FBe20e81D682EAb6,
+            v4ClPoolManager: 0x26Ca53c8C5CE90E22aA1FadDA68AB9a08f7BA06f,
+            v4BinPoolManager: 0x1DF0be383e9d17DA4448E57712849aBE5b3Fa33b,
             v3NFTPositionManager: 0x427bF5b37357632377eCbEC9de3626C71A5396c1,
-            v4ClPositionManager: 0x89A7D45D007077485CB5aE2abFB740b1fe4FF574,
-            v4BinPositionManager: 0xfB84c0D67f217f078E949d791b8d3081FE91Bca2
+            v4ClPositionManager: 0x095bd2cf90ef113aa8c53904cE54C17f4583046d,
+            v4BinPositionManager: 0x26008c91a2D47147d6739db3fFd3598A27da859d
         });
 
         unsupported = 0xe4da88F38C11C1450c720b8aDeDd94956610a4e5;
