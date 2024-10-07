@@ -23,7 +23,7 @@ contract DeployBscTestnet is DeployUniversalRouter {
             v2InitCodeHash: 0xd0d4c4cd0848c93cb4fd1f498d7013ee6bfb25783ea21593d5834f5d250ece66,
             v3InitCodeHash: 0x6ce8eb472fa82df5469c6ab6d485f17c3ad13c8cd7af59b3d4a8026c5ce0f7e2,
             stableFactory: 0xe6A00f8b819244e8Ab9Ea930e46449C2F20B6609,
-            stableInfo: 0xe6A00f8b819244e8Ab9Ea930e46449C2F20B6609,
+            stableInfo: 0x0A548d59D04096Bc01206D58C3D63c478e1e06dB,
             v4Vault: 0x0a125Bb36e409957Ed951eF1FBe20e81D682EAb6,
             v4ClPoolManager: 0x26Ca53c8C5CE90E22aA1FadDA68AB9a08f7BA06f,
             v4BinPoolManager: 0x1DF0be383e9d17DA4448E57712849aBE5b3Fa33b,
