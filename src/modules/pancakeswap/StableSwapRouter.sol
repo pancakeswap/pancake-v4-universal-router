@@ -78,10 +78,11 @@ abstract contract StableSwapRouter is RouterImmutables, Permit2Payments, Ownable
         }
 
         ERC20 tokenOut = ERC20(path[path.length - 1]);
+        uint256 balanceBefore = tokenOut.balanceOf(address(this));
 
         _stableSwap(path, flag);
 
-        uint256 amountOut = tokenOut.balanceOf(address(this));
+        uint256 amountOut = tokenOut.balanceOf(address(this)) - balanceBefore;
         if (amountOut < amountOutMinimum) revert StableTooLittleReceived();
 
         if (recipient != address(this)) pay(address(tokenOut), recipient, amountOut);

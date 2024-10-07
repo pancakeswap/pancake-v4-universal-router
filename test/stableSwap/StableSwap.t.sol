@@ -173,6 +173,23 @@ abstract contract StableSwapTest is Test, GasSnapshot {
         assertEq(ERC20(token1()).balanceOf(FROM), BALANCE); // no token1 taken from user, taken from router
     }
 
+    function test_stableSwap_exactInput0For1_StableTooLittleReceived() public {
+        // have some AMOUNT * 2 token1 in router, assumed from previous commands
+        deal(token1(), address(router), AMOUNT * 2);
+
+        bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.STABLE_SWAP_EXACT_IN)));
+        // equivalent: abi.decode(inputs, (address, uint256, uint256, address[], uint256[], bool)
+        address[] memory path = new address[](2);
+        path[0] = token0();
+        path[1] = token1();
+        bytes[] memory inputs = new bytes[](1);
+        // set minOut as amount * 2 which is not achievable
+        inputs[0] = abi.encode(ActionConstants.MSG_SENDER, AMOUNT, AMOUNT * 2, path, flag(), true);
+
+        vm.expectRevert(StableSwapRouter.StableTooLittleReceived.selector);
+        router.execute(commands, inputs);
+    }
+
     function test_stableSwap_exactOutput0For1() public {
         bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.STABLE_SWAP_EXACT_OUT)));
 
