@@ -302,6 +302,7 @@ abstract contract Dispatcher is
                         revert NotAuthorizedForToken(tokenId);
                     }
 
+                    /// @dev ensure there's follow-up action if v3 position's removed token are sent to router contract
                     (success, output) = address(V3_POSITION_MANAGER).call(inputs);
                     return (success, output);
                 } else if (command == Commands.V4_CL_POSITION_CALL) {

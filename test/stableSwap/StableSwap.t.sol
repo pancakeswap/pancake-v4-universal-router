@@ -151,10 +151,11 @@ abstract contract StableSwapTest is Test, GasSnapshot {
         path[0] = token0();
         path[1] = token1();
         bytes[] memory inputs = new bytes[](1);
-        inputs[0] = abi.encode(ActionConstants.MSG_SENDER, AMOUNT, 0, path, flag(), true);
+        inputs[0] = abi.encode(ActionConstants.MSG_SENDER, AMOUNT, 0, path, flag(), false);
 
         router.execute(commands, inputs);
-        assertGt(ERC20(token1()).balanceOf(FROM), BALANCE);
+        assertEq(ERC20(token0()).balanceOf(FROM), BALANCE); // no token0 taken from user, taken from router
+        assertGt(ERC20(token1()).balanceOf(FROM), BALANCE); // token1 received
     }
 
     function test_stableSwap_exactInput1For0FromRouter() public {
@@ -165,10 +166,28 @@ abstract contract StableSwapTest is Test, GasSnapshot {
         path[0] = token1();
         path[1] = token0();
         bytes[] memory inputs = new bytes[](1);
-        inputs[0] = abi.encode(ActionConstants.MSG_SENDER, AMOUNT, 0, path, flag(), true);
+        inputs[0] = abi.encode(ActionConstants.MSG_SENDER, AMOUNT, 0, path, flag(), false);
 
         router.execute(commands, inputs);
-        assertGt(ERC20(token0()).balanceOf(FROM), BALANCE);
+        assertGt(ERC20(token0()).balanceOf(FROM), BALANCE); // token0 received
+        assertEq(ERC20(token1()).balanceOf(FROM), BALANCE); // no token1 taken from user, taken from router
+    }
+
+    function test_stableSwap_exactInput0For1_StableTooLittleReceived() public {
+        // have some AMOUNT * 2 token1 in router, assumed from previous commands
+        deal(token1(), address(router), AMOUNT * 2);
+
+        bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.STABLE_SWAP_EXACT_IN)));
+        // equivalent: abi.decode(inputs, (address, uint256, uint256, address[], uint256[], bool)
+        address[] memory path = new address[](2);
+        path[0] = token0();
+        path[1] = token1();
+        bytes[] memory inputs = new bytes[](1);
+        // set minOut as amount * 2 which is not achievable
+        inputs[0] = abi.encode(ActionConstants.MSG_SENDER, AMOUNT, AMOUNT * 2, path, flag(), true);
+
+        vm.expectRevert(StableSwapRouter.StableTooLittleReceived.selector);
+        router.execute(commands, inputs);
     }
 
     function test_stableSwap_exactOutput0For1() public {
@@ -210,9 +229,10 @@ abstract contract StableSwapTest is Test, GasSnapshot {
         path[0] = token0();
         path[1] = token1();
         bytes[] memory inputs = new bytes[](1);
-        inputs[0] = abi.encode(ActionConstants.MSG_SENDER, AMOUNT, type(uint256).max, path, flag(), true);
+        inputs[0] = abi.encode(ActionConstants.MSG_SENDER, AMOUNT, type(uint256).max, path, flag(), false);
 
         router.execute(commands, inputs);
+        assertEq(ERC20(token0()).balanceOf(FROM), BALANCE); // no token0 taken from user, taken from router
         assertGe(ERC20(token1()).balanceOf(FROM), BALANCE + AMOUNT);
     }
 
@@ -225,10 +245,11 @@ abstract contract StableSwapTest is Test, GasSnapshot {
         path[0] = token1();
         path[1] = token0();
         bytes[] memory inputs = new bytes[](1);
-        inputs[0] = abi.encode(ActionConstants.MSG_SENDER, AMOUNT, type(uint256).max, path, flag(), true);
+        inputs[0] = abi.encode(ActionConstants.MSG_SENDER, AMOUNT, type(uint256).max, path, flag(), false);
 
         router.execute(commands, inputs);
         assertGe(ERC20(token0()).balanceOf(FROM), BALANCE + AMOUNT);
+        assertEq(ERC20(token1()).balanceOf(FROM), BALANCE); // no token1 taken from user, taken from router
     }
 
     function token0() internal virtual returns (address);
