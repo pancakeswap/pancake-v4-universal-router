@@ -5,13 +5,20 @@ import {DeployUniversalRouter} from "../../DeployUniversalRouter.s.sol";
 import {RouterParameters} from "../../../src/base/RouterImmutables.sol";
 
 /**
- * Note: As of now, opbnb does not support verify via foundry, so skipping --verify flag
+ * Step 1: Deploy
  * forge script script/deployParameters/mainnet/DeployOpBnb.s.sol:DeployOpbnb -vvv \
  *     --rpc-url $RPC_URL \
  *     --broadcast \
  *     --slow
+ *
+ * Step 2: Verify. As of now, opbnb does not support verify via foundry, so skipping verify
  */
 contract DeployOpbnb is DeployUniversalRouter {
+    /// @notice contract address will be based on deployment salt
+    function getDeploymentSalt() public pure override returns (bytes32) {
+        return keccak256("PANCAKE-V4-UNIVERSAL-ROUTER/UniversalRouter/0.0001");
+    }
+
     function setUp() public override {
         params = RouterParameters({
             permit2: 0x31c2F6fcFf4F8759b3Bd5Bf0e1084A055615c768,

@@ -6,12 +6,13 @@ import "forge-std/Script.sol";
 import {RouterParameters} from "../src/base/RouterImmutables.sol";
 import {UnsupportedProtocol} from "../src/deploy/UnsupportedProtocol.sol";
 import {UniversalRouter} from "../src/UniversalRouter.sol";
-
-bytes32 constant SALT = bytes32(uint256(0x00000000000000000000000000000000000000005eb67581652632000a6cbedf));
+import {Create3Factory} from "pancake-create3-factory/src/Create3Factory.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 abstract contract DeployUniversalRouter is Script {
     RouterParameters internal params;
     address internal unsupported;
+    address internal create3Factory; // from https://github.com/pancakeswap/pancake-create3-factory
 
     address constant UNSUPPORTED_PROTOCOL = address(0);
     bytes32 constant BYTES32_ZERO = bytes32(0);
@@ -21,7 +22,15 @@ abstract contract DeployUniversalRouter is Script {
     // set values for params and unsupported
     function setUp() public virtual;
 
-    function run() external returns (UniversalRouter router) {
+    /// @notice must be implemented by the inheriting contract to make sure eth deployment salt is unique
+    /// since the deployment salt will be the only factor to decide the address of the newly deployed contract
+    function getDeploymentSalt() public view virtual returns (bytes32);
+
+    function run() external returns (address router) {
+        /// @dev address from https://github.com/pancakeswap/pancake-create3-factory
+        Create3Factory factory = Create3Factory(0x38Ab3f2CE00973A51d3A2A04d634C9bcbf20e4e1);
+
+        // deployer will the the initial owner of universal router
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(deployerPrivateKey);
 
@@ -53,8 +62,21 @@ abstract contract DeployUniversalRouter is Script {
 
         logParams();
 
-        router = new UniversalRouter(params);
-        console2.log("Universal Router Deployed:", address(router));
+        /// Prepare the payload to transfer ownership to deployer.
+        /// @dev deployer must call acceptOwnership after to be the owner
+        address owner = vm.addr(deployerPrivateKey);
+        console.log("universal router owner:", owner);
+
+        bytes memory afterDeploymentExecutionPayload = abi.encodeWithSelector(Ownable.transferOwnership.selector, owner);
+
+        bytes memory creationCode = abi.encodePacked(type(UniversalRouter).creationCode, abi.encode(params));
+
+        router = factory.deploy(
+            getDeploymentSalt(), creationCode, keccak256(creationCode), 0, afterDeploymentExecutionPayload, 0
+        );
+
+        console.log("UniversalRouter contract deployed at ", router);
+
         vm.stopBroadcast();
     }
 
