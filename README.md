@@ -35,6 +35,8 @@ forge script script/deployParameters/DeployArbitrum.s.sol:DeployArbitrum -vvv \
     --slow 
 ``` 
 
+Remember to call `.acceptOwnership()` to be the owner of universal router
+
 ## Verifying
 
 Each script includes a verification command. Verification needs to be performed separately since the contract is deployed using the create3 method.
