@@ -34,6 +34,7 @@ import {BinLiquidityHelper} from "pancake-v4-periphery/test/pool-bin/helper/BinL
 
 import {IPancakeV3PoolDeployer} from "../src/modules/pancakeswap/v3/interfaces/IPancakeV3PoolDeployer.sol";
 import {IPancakeV3Factory} from "../src/modules/pancakeswap/v3/interfaces/IPancakeV3Factory.sol";
+import {V3ToV4Migrator} from "../src/modules/V3ToV4Migrator.sol";
 import {IUniversalRouter} from "../src/interfaces/IUniversalRouter.sol";
 import {Commands} from "../src/libraries/Commands.sol";
 import {RouterParameters} from "../src/base/RouterImmutables.sol";
@@ -184,7 +185,7 @@ contract V3ToV4MigrationTest is BasePancakeSwapV4, OldVersionHelper, BinLiquidit
         bytes[] memory inputs = new bytes[](1);
         inputs[0] = abi.encodePacked(IV3NonfungiblePositionManager.collect.selector, abi.encode(params));
 
-        vm.expectRevert(abi.encodeWithSelector(Dispatcher.NotAuthorizedForToken.selector, params.tokenId));
+        vm.expectRevert(abi.encodeWithSelector(V3ToV4Migrator.NotAuthorizedForToken.selector, params.tokenId));
         router.execute(commands, inputs);
     }
 
@@ -208,7 +209,7 @@ contract V3ToV4MigrationTest is BasePancakeSwapV4, OldVersionHelper, BinLiquidit
         inputs[0] = abi.encodePacked(IV3NonfungiblePositionManager.mint.selector, abi.encode(params));
 
         vm.expectRevert(
-            abi.encodeWithSelector(Dispatcher.InvalidAction.selector, IV3NonfungiblePositionManager.mint.selector)
+            abi.encodeWithSelector(V3ToV4Migrator.InvalidAction.selector, IV3NonfungiblePositionManager.mint.selector)
         );
         router.execute(commands, inputs);
     }
@@ -278,6 +279,74 @@ contract V3ToV4MigrationTest is BasePancakeSwapV4, OldVersionHelper, BinLiquidit
         // after: verify token0/token1 balance in router
         assertEq(token0.balanceOf(address(router)), 9999999999999999999);
         assertEq(token1.balanceOf(address(router)), 9999999999999999999);
+    }
+
+    function test_v4CLPositionmanger_InvalidAction() public {
+        Plan memory planner = Planner.init();
+
+        // prep universal router actions
+        bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.V4_CL_POSITION_CALL)));
+        bytes[] memory inputs = new bytes[](1);
+
+        bytes4 invalidSelector = IPositionManager.modifyLiquiditiesWithoutLock.selector;
+        inputs[0] = abi.encodePacked(invalidSelector, abi.encode(planner.encode(), block.timestamp));
+        vm.expectRevert(abi.encodeWithSelector(V3ToV4Migrator.InvalidAction.selector, invalidSelector));
+        router.execute(commands, inputs);
+    }
+
+    function test_v4CLPositionmanger_BlacklistedAction() public {
+        Plan memory planner = Planner.init();
+        bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.V4_CL_POSITION_CALL)));
+        bytes[] memory inputs = new bytes[](1);
+
+        uint256[] memory invalidActions = new uint256[](3);
+        invalidActions[0] = Actions.CL_INCREASE_LIQUIDITY;
+        invalidActions[1] = Actions.CL_DECREASE_LIQUIDITY;
+        invalidActions[2] = Actions.CL_BURN_POSITION;
+
+        for (uint256 i; i < invalidActions.length; i++) {
+            planner.add(invalidActions[i], "");
+            inputs[0] = abi.encodePacked(
+                IPositionManager.modifyLiquidities.selector, abi.encode(planner.encode(), block.timestamp)
+            );
+
+            // verify revert for invalid actions
+            vm.expectRevert(V3ToV4Migrator.BlacklistedAction.selector);
+            router.execute(commands, inputs);
+        }
+    }
+
+    function test_v4BinPositionmanger_InvalidAction() public {
+        Plan memory planner = Planner.init();
+
+        // prep universal router actions
+        bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.V4_BIN_POSITION_CALL)));
+        bytes[] memory inputs = new bytes[](1);
+
+        bytes4 invalidSelector = IPositionManager.modifyLiquiditiesWithoutLock.selector;
+        inputs[0] = abi.encodePacked(invalidSelector, abi.encode(planner.encode(), block.timestamp));
+        vm.expectRevert(abi.encodeWithSelector(V3ToV4Migrator.InvalidAction.selector, invalidSelector));
+        router.execute(commands, inputs);
+    }
+
+    function test_v4BinPositionmanger_BlacklistedAction() public {
+        Plan memory planner = Planner.init();
+        bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.V4_BIN_POSITION_CALL)));
+        bytes[] memory inputs = new bytes[](1);
+
+        uint256[] memory invalidActions = new uint256[](1);
+        invalidActions[0] = Actions.BIN_REMOVE_LIQUIDITY;
+
+        for (uint256 i; i < invalidActions.length; i++) {
+            planner.add(invalidActions[i], "");
+            inputs[0] = abi.encodePacked(
+                IPositionManager.modifyLiquidities.selector, abi.encode(planner.encode(), block.timestamp)
+            );
+
+            // verify revert for invalid actions
+            vm.expectRevert(V3ToV4Migrator.BlacklistedAction.selector);
+            router.execute(commands, inputs);
+        }
     }
 
     /// @dev Assume token0/token1 is aready in universal router from earlier steps on v3

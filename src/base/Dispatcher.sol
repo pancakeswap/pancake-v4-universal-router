@@ -17,6 +17,9 @@ import {IERC721Permit} from "pancake-v4-periphery/src/pool-cl/interfaces/IERC721
 import {ActionConstants} from "pancake-v4-periphery/src/libraries/ActionConstants.sol";
 import {BaseActionsRouter} from "pancake-v4-periphery/src/base/BaseActionsRouter.sol";
 import {CalldataDecoder} from "pancake-v4-periphery/src/libraries/CalldataDecoder.sol";
+import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
+import {ICLPoolManager} from "pancake-v4-core/src/pool-cl/interfaces/ICLPoolManager.sol";
+import {IBinPoolManager} from "pancake-v4-core/src/pool-bin/interfaces/IBinPoolManager.sol";
 
 /// @title Decodes and Executes Commands
 /// @notice Called by the UniversalRouter contract to efficiently decode and execute a singular command
@@ -34,8 +37,6 @@ abstract contract Dispatcher is
 
     error InvalidCommandType(uint256 commandType);
     error BalanceTooLow();
-    error InvalidAction(bytes4 action);
-    error NotAuthorizedForToken(uint256 tokenId);
 
     /// @notice Executes encoded commands along with provided inputs.
     /// @param commands A set of concatenated commands, each 1 byte in length
@@ -305,14 +306,34 @@ abstract contract Dispatcher is
                     /// @dev ensure there's follow-up action if v3 position's removed token are sent to router contract
                     (success, output) = address(V3_POSITION_MANAGER).call(inputs);
                     return (success, output);
+                } else if (command == Commands.V4_CL_INITIALIZE_POOL) {
+                    PoolKey calldata poolKey;
+                    uint160 sqrtPriceX96;
+                    assembly {
+                        poolKey := inputs.offset
+                        sqrtPriceX96 := calldataload(add(inputs.offset, 0xc0)) // poolKey has 6 variable, so it takes 192 space = 0xc0
+                    }
+                    // <wip> remove "" hookData once we updated universal-router dependencies
+                    (success, output) = address(clPoolManager).call(
+                        abi.encodeCall(ICLPoolManager.initialize, (poolKey, sqrtPriceX96, ""))
+                    );
+                } else if (command == Commands.V4_BIN_INITIALIZE_POOL) {
+                    PoolKey calldata poolKey;
+                    uint24 activeId;
+                    assembly {
+                        poolKey := inputs.offset
+                        activeId := calldataload(add(inputs.offset, 0xc0)) // poolKey has 6 variable, so it takes 192 space = 0xc0
+                    }
+                    // <wip> remove "" hookData once we updated universal-router dependencies
+                    (success, output) = address(binPoolManager).call(
+                        abi.encodeCall(IBinPoolManager.initialize, (poolKey, activeId, ""))
+                    );
                 } else if (command == Commands.V4_CL_POSITION_CALL) {
-                    // should only call modifyLiquidities() with Actions.CL_MINT_POSITION
-                    // do not permit or approve this contract over a v4 position or someone could use this command to decrease, burn, or transfer your position
+                    _checkV4ClPositionManagerCall(inputs);
                     (success, output) = address(V4_CL_POSITION_MANAGER).call{value: address(this).balance}(inputs);
                     return (success, output);
                 } else if (command == Commands.V4_BIN_POSITION_CALL) {
-                    // should only call modifyLiquidities() with Actions.BIN_ADD_LIQUIDITY
-                    // do not permit or approve this contract over a v4 position or someone could use this command to decrease, burn, or transfer your position
+                    _checkV4BinPositionManagerCall(inputs);
                     (success, output) = address(V4_BIN_POSITION_MANAGER).call{value: address(this).balance}(inputs);
                     return (success, output);
                 } else {

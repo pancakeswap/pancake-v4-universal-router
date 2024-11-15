@@ -23,9 +23,11 @@ import {IBinRouterBase} from "pancake-v4-periphery/src/pool-bin/interfaces/IBinR
 import {BinLiquidityHelper} from "pancake-v4-periphery/test/pool-bin/helper/BinLiquidityHelper.sol";
 import {IBinPositionManager} from "pancake-v4-periphery/src/pool-bin/interfaces/IBinPositionManager.sol";
 import {PathKey} from "pancake-v4-periphery/src/libraries/PathKey.sol";
+import {BinPool} from "pancake-v4-core/src/pool-bin/libraries/BinPool.sol";
 
 import {BasePancakeSwapV4} from "./BasePancakeSwapV4.sol";
 import {UniversalRouter} from "../../src/UniversalRouter.sol";
+import {IUniversalRouter} from "../../src/interfaces/IUniversalRouter.sol";
 import {Constants} from "../../src/libraries/Constants.sol";
 import {Commands} from "../../src/libraries/Commands.sol";
 import {RouterParameters} from "../../src/base/RouterImmutables.sol";
@@ -105,6 +107,7 @@ contract BinPancakeSwapV4Test is BasePancakeSwapV4, BinLiquidityHelper {
         poolManager.initialize(poolKey0, ACTIVE_ID_1_1, new bytes(0));
         _mint(poolKey0);
 
+        // initialize poolKey1 via universal-router
         poolKey1 = PoolKey({
             currency0: currency1,
             currency1: currency2,
@@ -113,8 +116,46 @@ contract BinPancakeSwapV4Test is BasePancakeSwapV4, BinLiquidityHelper {
             fee: uint24(3000),
             parameters: bytes32(0).setBinStep(10)
         });
-        poolManager.initialize(poolKey1, ACTIVE_ID_1_1, new bytes(0));
+        bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.V4_BIN_INITIALIZE_POOL)));
+        bytes[] memory inputs = new bytes[](1);
+        inputs[0] = abi.encode(poolKey1, ACTIVE_ID_1_1);
+        router.execute(commands, inputs);
         _mint(poolKey1);
+    }
+
+    function test_v4BinSwap_InitializeBinPool() public {
+        PoolKey memory _poolKey = PoolKey({
+            currency0: currency0,
+            currency1: currency2,
+            hooks: IHooks(address(0)),
+            poolManager: poolManager,
+            fee: uint24(3000),
+            parameters: bytes32(0).setBinStep(55)
+        });
+
+        // before
+        (uint24 activeId,,) = poolManager.getSlot0(_poolKey.toId());
+        assertEq(activeId, 0);
+
+        // initialize
+        bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.V4_BIN_INITIALIZE_POOL)));
+        bytes[] memory inputs = new bytes[](1);
+        inputs[0] = abi.encode(_poolKey, ACTIVE_ID_1_1);
+        snapStart("BinPancakeSwapV4Test#test_v4BinSwap_InitializeBinPool");
+        router.execute(commands, inputs);
+        snapEnd();
+
+        // verify
+        (activeId,,) = poolManager.getSlot0(_poolKey.toId());
+        assertEq(activeId, ACTIVE_ID_1_1);
+
+        // initialize again
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IUniversalRouter.ExecutionFailed.selector, 0, abi.encodePacked(BinPool.PoolAlreadyInitialized.selector)
+            )
+        );
+        router.execute(commands, inputs);
     }
 
     function test_v4BinSwap_ExactInSingle() public {
