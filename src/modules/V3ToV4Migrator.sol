@@ -18,12 +18,6 @@ abstract contract V3ToV4Migrator is RouterImmutables {
     error InvalidAction(bytes4 action);
     error OnlyMintAllowed();
     error OnlyAddLiqudityAllowed();
-    error BlacklistedAction();
-
-    enum PoolType {
-        CL,
-        BIN
-    }
 
     /// @dev validate if an action is decreaseLiquidity, collect, or burn
     function isValidAction(bytes4 selector) internal pure returns (bool) {
@@ -37,15 +31,6 @@ abstract contract V3ToV4Migrator is RouterImmutables {
         address owner = V3_POSITION_MANAGER.ownerOf(tokenId);
         return caller == owner || V3_POSITION_MANAGER.getApproved(tokenId) == caller
             || V3_POSITION_MANAGER.isApprovedForAll(owner, caller);
-    }
-
-    function isBlacklistedCLPositionManagerAction(uint256 action) internal pure returns (bool) {
-        return action == Actions.CL_INCREASE_LIQUIDITY || action == Actions.CL_DECREASE_LIQUIDITY
-            || action == Actions.CL_BURN_POSITION;
-    }
-
-    function isBlacklistedBinPositionManagerAction(uint256 action) internal pure returns (bool) {
-        return action == Actions.BIN_REMOVE_LIQUIDITY;
     }
 
     /// @dev check that the v4 position manager call is a safe call
