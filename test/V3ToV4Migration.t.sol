@@ -311,7 +311,7 @@ contract V3ToV4MigrationTest is BasePancakeSwapV4, OldVersionHelper, BinLiquidit
             );
 
             // verify revert for invalid actions
-            vm.expectRevert(V3ToV4Migrator.BlacklistedAction.selector);
+            vm.expectRevert(V3ToV4Migrator.OnlyMintAllowed.selector);
             router.execute(commands, inputs);
         }
     }
@@ -344,7 +344,7 @@ contract V3ToV4MigrationTest is BasePancakeSwapV4, OldVersionHelper, BinLiquidit
             );
 
             // verify revert for invalid actions
-            vm.expectRevert(V3ToV4Migrator.BlacklistedAction.selector);
+            vm.expectRevert(V3ToV4Migrator.OnlyAddLiqudityAllowed.selector);
             router.execute(commands, inputs);
         }
     }
