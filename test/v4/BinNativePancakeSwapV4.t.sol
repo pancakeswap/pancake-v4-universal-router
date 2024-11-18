@@ -5,6 +5,7 @@ import {Test, console} from "forge-std/Test.sol";
 import {GasSnapshot} from "forge-gas-snapshot/GasSnapshot.sol";
 import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
 import {WETH} from "solmate/src/tokens/WETH.sol";
+import {IWETH9} from "pancake-v4-periphery/src/interfaces/external/IWETH9.sol";
 import {MockERC20} from "solmate/src/test/utils/mocks/MockERC20.sol";
 
 import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
@@ -63,7 +64,7 @@ contract BinNativePancakeSwapV4Test is BasePancakeSwapV4, BinLiquidityHelper {
 
         token1 = MockERC20(Currency.unwrap(currency1));
 
-        positionManager = new BinPositionManager(vault, poolManager, permit2);
+        positionManager = new BinPositionManager(vault, poolManager, permit2, IWETH9(address(weth9)));
         _approvePermit2ForCurrency(address(this), currency1, address(positionManager), permit2);
 
         RouterParameters memory params = RouterParameters({
@@ -94,7 +95,7 @@ contract BinNativePancakeSwapV4Test is BasePancakeSwapV4, BinLiquidityHelper {
             fee: uint24(3000),
             parameters: bytes32(0).setBinStep(10)
         });
-        poolManager.initialize(poolKey0, ACTIVE_ID_1_1, new bytes(0));
+        poolManager.initialize(poolKey0, ACTIVE_ID_1_1);
         _mint(poolKey0);
     }
 

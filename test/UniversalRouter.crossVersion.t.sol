@@ -4,6 +4,7 @@ pragma solidity ^0.8.15;
 import {Test, console} from "forge-std/Test.sol";
 import {GasSnapshot} from "forge-gas-snapshot/GasSnapshot.sol";
 import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
+import {IWETH9} from "pancake-v4-periphery/src/interfaces/external/IWETH9.sol";
 import {WETH} from "solmate/src/tokens/WETH.sol";
 import {MockERC20} from "solmate/src/test/utils/mocks/MockERC20.sol";
 
@@ -21,6 +22,7 @@ import {CLPoolParametersHelper} from "pancake-v4-core/src/pool-cl/libraries/CLPo
 import {BinPoolParametersHelper} from "pancake-v4-core/src/pool-bin/libraries/BinPoolParametersHelper.sol";
 import {ActionConstants} from "pancake-v4-periphery/src/libraries/ActionConstants.sol";
 import {Plan, Planner} from "pancake-v4-periphery/src/libraries/Planner.sol";
+import {CLPositionDescriptorOffChain} from "pancake-v4-periphery/src/pool-cl/CLPositionDescriptorOffChain.sol";
 import {CLPositionManager} from "pancake-v4-periphery/src/pool-cl/CLPositionManager.sol";
 import {BinPositionManager} from "pancake-v4-periphery/src/pool-bin/BinPositionManager.sol";
 import {Actions} from "pancake-v4-periphery/src/libraries/Actions.sol";
@@ -112,8 +114,10 @@ contract UniversalRouterCrossVersionTest is BasePancakeSwapV4, OldVersionHelper,
         vault.registerApp(address(binPoolManager));
         vault.registerApp(address(clPoolManager));
 
-        binPositionManager = new BinPositionManager(vault, binPoolManager, permit2);
-        clPositionManager = new CLPositionManager(vault, clPoolManager, permit2, 100_000);
+        binPositionManager = new BinPositionManager(vault, binPoolManager, permit2, IWETH9(address(weth)));
+        CLPositionDescriptorOffChain pd =
+            new CLPositionDescriptorOffChain("https://pancakeswap.finance/v4/pool-cl/positions/");
+        clPositionManager = new CLPositionManager(vault, clPoolManager, permit2, 100_000, pd, IWETH9(address(weth)));
 
         ///////////////////////////////////
         //////////// Router setup /////////////
@@ -204,8 +208,6 @@ contract UniversalRouterCrossVersionTest is BasePancakeSwapV4, OldVersionHelper,
             // OPEN_DELTA indicates using the amount from vault delta
             amountIn: ActionConstants.OPEN_DELTA,
             amountOutMinimum: 0.8 ether,
-            // TODO: price limit is removed in next version
-            sqrtPriceLimitX96: TickMath.MIN_SQRT_RATIO + 1,
             hookData: new bytes(0)
         });
         planner.add(Actions.CL_SWAP_EXACT_IN_SINGLE, abi.encode(params));
@@ -276,8 +278,6 @@ contract UniversalRouterCrossVersionTest is BasePancakeSwapV4, OldVersionHelper,
             // OPEN_DELTA indicates using the amount from vault delta
             amountIn: ActionConstants.OPEN_DELTA,
             amountOutMinimum: 0.8 ether,
-            // TODO: price limit is removed in next version
-            sqrtPriceLimitX96: zeroForOne ? TickMath.MIN_SQRT_RATIO + 1 : TickMath.MAX_SQRT_RATIO - 1,
             hookData: new bytes(0)
         });
         planner.add(Actions.CL_SWAP_EXACT_IN_SINGLE, abi.encode(params));
@@ -335,8 +335,6 @@ contract UniversalRouterCrossVersionTest is BasePancakeSwapV4, OldVersionHelper,
             amountIn: 1 ether,
             // we only need to check at the very end
             amountOutMinimum: 0,
-            // TODO: price limit is removed in next version
-            sqrtPriceLimitX96: TickMath.MAX_SQRT_RATIO - 1,
             hookData: new bytes(0)
         });
         planner.add(Actions.CL_SWAP_EXACT_IN_SINGLE, abi.encode(params));
@@ -418,8 +416,6 @@ contract UniversalRouterCrossVersionTest is BasePancakeSwapV4, OldVersionHelper,
             amountIn: 1 ether,
             // we only need to check at the very end
             amountOutMinimum: 0,
-            // TODO: price limit is removed in next version
-            sqrtPriceLimitX96: zeroForOne ? TickMath.MIN_SQRT_RATIO + 1 : TickMath.MAX_SQRT_RATIO - 1,
             hookData: new bytes(0)
         });
         planner.add(Actions.CL_SWAP_EXACT_IN_SINGLE, abi.encode(params));
@@ -516,7 +512,7 @@ contract UniversalRouterCrossVersionTest is BasePancakeSwapV4, OldVersionHelper,
             fee: uint24(LP_FEE),
             parameters: bytes32(0).setTickSpacing(10)
         });
-        clPoolManager.initialize(key, SQRT_PRICE_1_1, new bytes(0));
+        clPoolManager.initialize(key, SQRT_PRICE_1_1);
 
         // prep position manager action to mint liquidity
         Plan memory planner = Planner.init();

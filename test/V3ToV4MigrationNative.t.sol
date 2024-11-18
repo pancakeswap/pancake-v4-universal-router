@@ -4,6 +4,7 @@ pragma solidity ^0.8.15;
 import {Test, console} from "forge-std/Test.sol";
 import {GasSnapshot} from "forge-gas-snapshot/GasSnapshot.sol";
 import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
+import {IWETH9} from "pancake-v4-periphery/src/interfaces/external/IWETH9.sol";
 import {WETH} from "solmate/src/tokens/WETH.sol";
 import {MockERC20} from "solmate/src/test/utils/mocks/MockERC20.sol";
 
@@ -22,6 +23,7 @@ import {BinPoolParametersHelper} from "pancake-v4-core/src/pool-bin/libraries/Bi
 import {ActionConstants} from "pancake-v4-periphery/src/libraries/ActionConstants.sol";
 import {Plan, Planner} from "pancake-v4-periphery/src/libraries/Planner.sol";
 import {CLPositionManager} from "pancake-v4-periphery/src/pool-cl/CLPositionManager.sol";
+import {CLPositionDescriptorOffChain} from "pancake-v4-periphery/src/pool-cl/CLPositionDescriptorOffChain.sol";
 import {BinPositionManager} from "pancake-v4-periphery/src/pool-bin/BinPositionManager.sol";
 import {Actions} from "pancake-v4-periphery/src/libraries/Actions.sol";
 import {IV3NonfungiblePositionManager} from
@@ -88,10 +90,12 @@ contract V3ToV4MigrationNativeTest is BasePancakeSwapV4, OldVersionHelper, BinLi
         vault.registerApp(address(binPoolManager));
         vault.registerApp(address(clPoolManager));
 
-        binPositionManager = new BinPositionManager(vault, binPoolManager, permit2);
+        binPositionManager = new BinPositionManager(vault, binPoolManager, permit2, IWETH9(address(weth)));
         _approvePermit2ForCurrency(address(this), currency1, address(binPositionManager), permit2);
 
-        clPositionManager = new CLPositionManager(vault, clPoolManager, permit2, 100_000);
+        CLPositionDescriptorOffChain pd =
+            new CLPositionDescriptorOffChain("https://pancakeswap.finance/v4/pool-cl/positions/");
+        clPositionManager = new CLPositionManager(vault, clPoolManager, permit2, 100_000, pd, IWETH9(address(weth)));
         _approvePermit2ForCurrency(address(this), currency1, address(clPositionManager), permit2);
 
         clPoolKey = PoolKey({
@@ -102,7 +106,7 @@ contract V3ToV4MigrationNativeTest is BasePancakeSwapV4, OldVersionHelper, BinLi
             fee: uint24(3000),
             parameters: bytes32(0).setTickSpacing(10)
         });
-        clPoolManager.initialize(clPoolKey, SQRT_PRICE_1_1, new bytes(0));
+        clPoolManager.initialize(clPoolKey, SQRT_PRICE_1_1);
 
         binPoolKey = PoolKey({
             currency0: CurrencyLibrary.NATIVE,
@@ -112,7 +116,7 @@ contract V3ToV4MigrationNativeTest is BasePancakeSwapV4, OldVersionHelper, BinLi
             fee: uint24(3000),
             parameters: bytes32(0).setBinStep(10)
         });
-        binPoolManager.initialize(binPoolKey, ACTIVE_ID_1_1, new bytes(0));
+        binPoolManager.initialize(binPoolKey, ACTIVE_ID_1_1);
 
         ///////////////////////////////////
         //////////// Router setup /////////////
