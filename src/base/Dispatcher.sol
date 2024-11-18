@@ -290,10 +290,8 @@ abstract contract Dispatcher is
                         poolKey := inputs.offset
                         sqrtPriceX96 := calldataload(add(inputs.offset, 0xc0)) // poolKey has 6 variable, so it takes 192 space = 0xc0
                     }
-                    // <wip> remove "" hookData once we updated universal-router dependencies
-                    (success, output) = address(clPoolManager).call(
-                        abi.encodeCall(ICLPoolManager.initialize, (poolKey, sqrtPriceX96, ""))
-                    );
+                    (success, output) =
+                        address(clPoolManager).call(abi.encodeCall(ICLPoolManager.initialize, (poolKey, sqrtPriceX96)));
                 } else if (command == Commands.V4_BIN_INITIALIZE_POOL) {
                     PoolKey calldata poolKey;
                     uint24 activeId;
@@ -301,10 +299,8 @@ abstract contract Dispatcher is
                         poolKey := inputs.offset
                         activeId := calldataload(add(inputs.offset, 0xc0)) // poolKey has 6 variable, so it takes 192 space = 0xc0
                     }
-                    // <wip> remove "" hookData once we updated universal-router dependencies
-                    (success, output) = address(binPoolManager).call(
-                        abi.encodeCall(IBinPoolManager.initialize, (poolKey, activeId, ""))
-                    );
+                    (success, output) =
+                        address(binPoolManager).call(abi.encodeCall(IBinPoolManager.initialize, (poolKey, activeId)));
                 } else if (command == Commands.V4_CL_POSITION_CALL) {
                     _checkV4ClPositionManagerCall(inputs);
                     (success, output) = address(V4_CL_POSITION_MANAGER).call{value: address(this).balance}(inputs);

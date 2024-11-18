@@ -4,6 +4,7 @@ pragma solidity ^0.8.13;
 import {Test, console} from "forge-std/Test.sol";
 import {GasSnapshot} from "forge-gas-snapshot/GasSnapshot.sol";
 import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
+import {IWETH9} from "pancake-v4-periphery/src/interfaces/external/IWETH9.sol";
 import {WETH} from "solmate/src/tokens/WETH.sol";
 import {MockERC20} from "solmate/src/test/utils/mocks/MockERC20.sol";
 
@@ -20,6 +21,7 @@ import {SqrtPriceMath} from "pancake-v4-core/src/pool-cl/libraries/SqrtPriceMath
 import {TickMath} from "pancake-v4-core/src/pool-cl/libraries/TickMath.sol";
 import {ActionConstants} from "pancake-v4-periphery/src/libraries/ActionConstants.sol";
 import {Plan, Planner} from "pancake-v4-periphery/src/libraries/Planner.sol";
+import {CLPositionDescriptorOffChain} from "pancake-v4-periphery/src/pool-cl/CLPositionDescriptorOffChain.sol";
 import {CLPositionManager} from "pancake-v4-periphery/src/pool-cl/CLPositionManager.sol";
 import {Actions} from "pancake-v4-periphery/src/libraries/Actions.sol";
 import {ICLRouterBase} from "pancake-v4-periphery/src/pool-cl/interfaces/ICLRouterBase.sol";
@@ -71,7 +73,9 @@ contract CLPancakeSwapV4Test is BasePancakeSwapV4 {
         token1 = MockERC20(Currency.unwrap(currency1));
         token2 = MockERC20(Currency.unwrap(currency2));
 
-        positionManager = new CLPositionManager(vault, poolManager, permit2, 100_000);
+        CLPositionDescriptorOffChain pd =
+            new CLPositionDescriptorOffChain("https://pancakeswap.finance/v4/pool-cl/positions/");
+        positionManager = new CLPositionManager(vault, poolManager, permit2, 100_000, pd, IWETH9(address(weth9)));
         _approvePermit2ForCurrency(address(this), currency0, address(positionManager), permit2);
         _approvePermit2ForCurrency(address(this), currency1, address(positionManager), permit2);
         _approvePermit2ForCurrency(address(this), currency2, address(positionManager), permit2);
@@ -106,7 +110,7 @@ contract CLPancakeSwapV4Test is BasePancakeSwapV4 {
             fee: uint24(3000),
             parameters: bytes32(0).setTickSpacing(10)
         });
-        poolManager.initialize(poolKey0, SQRT_PRICE_1_1, new bytes(0));
+        poolManager.initialize(poolKey0, SQRT_PRICE_1_1);
         _mint(poolKey0);
 
         // initialize poolKey1 via universal-router
@@ -168,7 +172,7 @@ contract CLPancakeSwapV4Test is BasePancakeSwapV4 {
 
         // prepare v4 swap input
         ICLRouterBase.CLSwapExactInputSingleParams memory params =
-            ICLRouterBase.CLSwapExactInputSingleParams(poolKey0, true, amountIn, 0, 0, "");
+            ICLRouterBase.CLSwapExactInputSingleParams(poolKey0, true, amountIn, 0, "");
         plan = Planner.init().add(Actions.CL_SWAP_EXACT_IN_SINGLE, abi.encode(params));
         bytes memory data = plan.finalizeSwap(poolKey0.currency0, poolKey0.currency1, ActionConstants.MSG_SENDER);
 
@@ -272,7 +276,7 @@ contract CLPancakeSwapV4Test is BasePancakeSwapV4 {
 
         // prepare v4 swap input
         ICLRouterBase.CLSwapExactOutputSingleParams memory params =
-            ICLRouterBase.CLSwapExactOutputSingleParams(poolKey0, true, amountOut, amountOut * 2, 0, "");
+            ICLRouterBase.CLSwapExactOutputSingleParams(poolKey0, true, amountOut, amountOut * 2, "");
         plan = Planner.init().add(Actions.CL_SWAP_EXACT_OUT_SINGLE, abi.encode(params));
         bytes memory data = plan.finalizeSwap(poolKey0.currency0, poolKey0.currency1, ActionConstants.MSG_SENDER);
 
