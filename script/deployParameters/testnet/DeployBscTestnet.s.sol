@@ -17,7 +17,7 @@ import {RouterParameters} from "../../../src/base/RouterImmutables.sol";
 contract DeployBscTestnet is DeployUniversalRouter {
     /// @notice contract address will be based on deployment salt
     function getDeploymentSalt() public pure override returns (bytes32) {
-        return keccak256("PANCAKE-V4-UNIVERSAL-ROUTER/UniversalRouter/0.0001");
+        return keccak256("PANCAKE-V4-UNIVERSAL-ROUTER/UniversalRouter/0.90");
     }
 
     // ref from v3 universal router: https://testnet.bscscan.com/tx/0xdfab014e4f5df56d5a8b16375028ad0340f80070bd848eb57c4e0baf41210487
@@ -32,12 +32,12 @@ contract DeployBscTestnet is DeployUniversalRouter {
             v3InitCodeHash: 0x6ce8eb472fa82df5469c6ab6d485f17c3ad13c8cd7af59b3d4a8026c5ce0f7e2,
             stableFactory: 0xe6A00f8b819244e8Ab9Ea930e46449C2F20B6609,
             stableInfo: 0x0A548d59D04096Bc01206D58C3D63c478e1e06dB,
-            v4Vault: 0x0a125Bb36e409957Ed951eF1FBe20e81D682EAb6,
-            v4ClPoolManager: 0x26Ca53c8C5CE90E22aA1FadDA68AB9a08f7BA06f,
-            v4BinPoolManager: 0x1DF0be383e9d17DA4448E57712849aBE5b3Fa33b,
+            v4Vault: 0xd557753bde3f0EaF32626F8681Ac6d8c1EBA2BBa,
+            v4ClPoolManager: 0x70890E308DCE727180ac1B9550928fED342dea52,
+            v4BinPoolManager: 0x68554d088F3640Bd2A7B38b43AE70FDcc16ef197,
             v3NFTPositionManager: 0x427bF5b37357632377eCbEC9de3626C71A5396c1,
-            v4ClPositionManager: 0x095bd2cf90ef113aa8c53904cE54C17f4583046d,
-            v4BinPositionManager: 0x26008c91a2D47147d6739db3fFd3598A27da859d
+            v4ClPositionManager: 0x7E7856fBE18cd868dc9E2C161a7a78c53074D106,
+            v4BinPositionManager: 0x69317a4bF9Cd6bED6ea9b5C61ebcf78b5994A63E
         });
 
         unsupported = 0xe4da88F38C11C1450c720b8aDeDd94956610a4e5;
