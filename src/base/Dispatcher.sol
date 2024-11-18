@@ -13,7 +13,6 @@ import {Commands} from "../libraries/Commands.sol";
 import {Lock} from "./Lock.sol";
 import {ERC20} from "solmate/src/tokens/ERC20.sol";
 import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
-import {IERC721Permit} from "pancake-v4-periphery/src/pool-cl/interfaces/IERC721Permit.sol";
 import {ActionConstants} from "pancake-v4-periphery/src/libraries/ActionConstants.sol";
 import {BaseActionsRouter} from "pancake-v4-periphery/src/base/BaseActionsRouter.sol";
 import {CalldataDecoder} from "pancake-v4-periphery/src/libraries/CalldataDecoder.sol";
@@ -270,39 +269,11 @@ abstract contract Dispatcher is
                     return (success, output);
                     // This contract MUST be approved to spend the token since its going to be doing the call on the position manager
                 } else if (command == Commands.V3_POSITION_MANAGER_PERMIT) {
-                    bytes4 selector;
-                    assembly {
-                        selector := calldataload(inputs.offset)
-                    }
-                    if (selector != IERC721Permit.permit.selector) {
-                        revert InvalidAction(selector);
-                    }
-
+                    _checkV3PermitCall(inputs);
                     (success, output) = address(V3_POSITION_MANAGER).call(inputs);
                     return (success, output);
                 } else if (command == Commands.V3_POSITION_MANAGER_CALL) {
-                    bytes4 selector;
-                    assembly {
-                        selector := calldataload(inputs.offset)
-                    }
-                    if (!isValidAction(selector)) {
-                        revert InvalidAction(selector);
-                    }
-
-                    uint256 tokenId;
-                    assembly {
-                        // tokenId is always the first parameter in the valid actions
-                        tokenId := calldataload(add(inputs.offset, 0x04))
-                    }
-
-                    // If any other address that is not the owner wants to call this function, it also needs to be approved (in addition to this contract)
-                    // This can be done in 2 ways:
-                    //    1. This contract is permitted for the specific token and the caller is approved for ALL of the owner's tokens
-                    //    2. This contract is permitted for ALL of the owner's tokens and the caller is permitted for the specific token
-                    if (!isAuthorizedForToken(msgSender(), tokenId)) {
-                        revert NotAuthorizedForToken(tokenId);
-                    }
-
+                    _checkV3PositionManagerCall(inputs, msgSender());
                     /// @dev ensure there's follow-up action if v3 position's removed token are sent to router contract
                     (success, output) = address(V3_POSITION_MANAGER).call(inputs);
                     return (success, output);
