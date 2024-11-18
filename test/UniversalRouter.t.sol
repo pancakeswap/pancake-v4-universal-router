@@ -631,7 +631,7 @@ contract UniversalRouterTest is Test, GasSnapshot, Permit2SignatureHelpers, Depl
         // if valid commands, return
         if (command >= 0x00 && command <= 0x06) return;
         if (command >= 0x08 && command <= 0x0e) return;
-        if (command >= 0x10 && command <= 0x14) return;
+        if (command >= 0x10 && command <= 0x16) return;
         if (command >= 0x21 && command <= 0x23) return;
 
         bytes memory commands = abi.encodePacked(bytes1(uint8(command)));

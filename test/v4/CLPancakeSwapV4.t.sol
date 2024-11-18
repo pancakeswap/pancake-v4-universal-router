@@ -25,9 +25,11 @@ import {Actions} from "pancake-v4-periphery/src/libraries/Actions.sol";
 import {ICLRouterBase} from "pancake-v4-periphery/src/pool-cl/interfaces/ICLRouterBase.sol";
 import {LiquidityAmounts} from "pancake-v4-periphery/src/pool-cl/libraries/LiquidityAmounts.sol";
 import {PathKey} from "pancake-v4-periphery/src/libraries/PathKey.sol";
+import {CLPool} from "pancake-v4-core/src/pool-cl/libraries/CLPool.sol";
 
 import {BasePancakeSwapV4} from "./BasePancakeSwapV4.sol";
 import {UniversalRouter} from "../../src/UniversalRouter.sol";
+import {IUniversalRouter} from "../../src/interfaces/IUniversalRouter.sol";
 import {Constants} from "../../src/libraries/Constants.sol";
 import {Commands} from "../../src/libraries/Commands.sol";
 import {RouterParameters} from "../../src/base/RouterImmutables.sol";
@@ -107,6 +109,7 @@ contract CLPancakeSwapV4Test is BasePancakeSwapV4 {
         poolManager.initialize(poolKey0, SQRT_PRICE_1_1, new bytes(0));
         _mint(poolKey0);
 
+        // initialize poolKey1 via universal-router
         poolKey1 = PoolKey({
             currency0: currency1,
             currency1: currency2,
@@ -115,8 +118,47 @@ contract CLPancakeSwapV4Test is BasePancakeSwapV4 {
             fee: uint24(3000),
             parameters: bytes32(0).setTickSpacing(10)
         });
-        poolManager.initialize(poolKey1, SQRT_PRICE_1_1, new bytes(0));
+        bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.V4_CL_INITIALIZE_POOL)));
+        bytes[] memory inputs = new bytes[](1);
+        inputs[0] = abi.encode(poolKey1, SQRT_PRICE_1_1);
+        router.execute(commands, inputs);
         _mint(poolKey1);
+    }
+
+    function test_v4ClSwap_v4InitializeClPool() public {
+        MockERC20 _token = new MockERC20("token", "token", 18);
+        PoolKey memory _poolKey = PoolKey({
+            currency0: currency0,
+            currency1: currency2,
+            hooks: IHooks(address(0)),
+            poolManager: poolManager,
+            fee: uint24(3000),
+            parameters: bytes32(0).setTickSpacing(10)
+        });
+
+        // before
+        (uint160 sqrtPriceX96,,,) = poolManager.getSlot0(_poolKey.toId());
+        assertEq(sqrtPriceX96, 0);
+
+        // initialize
+        bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.V4_CL_INITIALIZE_POOL)));
+        bytes[] memory inputs = new bytes[](1);
+        inputs[0] = abi.encode(_poolKey, SQRT_PRICE_1_1);
+        snapStart("CLPancakeSwapV4Test#test_v4ClSwap_v4InitializeClPool");
+        router.execute(commands, inputs);
+        snapEnd();
+
+        // verify
+        (sqrtPriceX96,,,) = poolManager.getSlot0(_poolKey.toId());
+        assertEq(sqrtPriceX96, SQRT_PRICE_1_1);
+
+        // initialize again
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IUniversalRouter.ExecutionFailed.selector, 0, abi.encodePacked(CLPool.PoolAlreadyInitialized.selector)
+            )
+        );
+        router.execute(commands, inputs);
     }
 
     function test_v4ClSwap_ExactInSingle() public {

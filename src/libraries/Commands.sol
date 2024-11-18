@@ -35,9 +35,11 @@ library Commands {
     uint256 constant V4_SWAP = 0x10;
     uint256 constant V3_POSITION_MANAGER_PERMIT = 0x11;
     uint256 constant V3_POSITION_MANAGER_CALL = 0x12;
-    uint256 constant V4_CL_POSITION_CALL = 0x13;
-    uint256 constant V4_BIN_POSITION_CALL = 0x14;
-    // COMMAND_PLACEHOLDER = 0x15 -> 0x20
+    uint256 constant V4_CL_INITIALIZE_POOL = 0x13;
+    uint256 constant V4_BIN_INITIALIZE_POOL = 0x14;
+    uint256 constant V4_CL_POSITION_CALL = 0x15;
+    uint256 constant V4_BIN_POSITION_CALL = 0x16;
+    // COMMAND_PLACEHOLDER = 0x17 -> 0x20
 
     // Command Types where 0x21<=value<=0x3f
     uint256 constant EXECUTE_SUB_PLAN = 0x21;
