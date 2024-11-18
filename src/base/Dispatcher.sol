@@ -119,11 +119,14 @@ abstract contract Dispatcher is
                             permitBatch := add(inputs.offset, calldataload(inputs.offset))
                         }
                         bytes calldata data = inputs.toBytes(1);
-                        try PERMIT2.permit(msgSender(), permitBatch, data) {}
-                        catch (bytes memory reason) {
-                            output = reason;
-                            success = false;
-                        }
+                        (success, output) = address(PERMIT2).call(
+                            abi.encodeWithSignature(
+                                "permit(address,((address,uint160,uint48,uint48)[],address,uint256),bytes)",
+                                msgSender(),
+                                permitBatch,
+                                data
+                            )
+                        );
                         return (success, output);
                     } else if (command == Commands.SWEEP) {
                         // equivalent:  abi.decode(inputs, (address, address, uint256))
@@ -208,11 +211,14 @@ abstract contract Dispatcher is
                             permitSingle := inputs.offset
                         }
                         bytes calldata data = inputs.toBytes(6); // PermitSingle takes first 6 slots (0..5)
-                        try PERMIT2.permit(msgSender(), permitSingle, data) {}
-                        catch (bytes memory reason) {
-                            output = reason;
-                            success = false;
-                        }
+                        (success, output) = address(PERMIT2).call(
+                            abi.encodeWithSignature(
+                                "permit(address,((address,uint160,uint48,uint48),address,uint256),bytes)",
+                                msgSender(),
+                                permitSingle,
+                                data
+                            )
+                        );
                         return (success, output);
                     } else if (command == Commands.WRAP_ETH) {
                         // equivalent: abi.decode(inputs, (address, uint256))
