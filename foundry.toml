@@ -11,6 +11,7 @@ fs_permissions = [
 ]
 solc_version = '0.8.26'
 evm_version = "cancun"
+bytecode_hash = "none"
 
 # ref: https://github.com/foundry-rs/foundry/issues/4060 otherwise verification will have an issue
 auto_detect_remappings = false
