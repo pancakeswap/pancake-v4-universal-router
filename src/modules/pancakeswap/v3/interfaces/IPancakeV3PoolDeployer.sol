@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-2.0-or-later
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
 /// @title An interface for a contract that is capable of deploying PancakeSwap V3 Pools
