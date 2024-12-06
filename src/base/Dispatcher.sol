@@ -50,7 +50,7 @@ abstract contract Dispatcher is
 
     /// @notice Decodes and executes the given command with the given inputs
     /// @param commandType The command type to execute
-    /// @param inputs The inputs to execute the command with.
+    /// @param inputs The inputs to execute the command with
     /// @dev inputs must be ABI encoded using abi.encode() to ensure proper padding. WARNING: Direct calldata
     //       manipulation or abi.encodePacked() can result in incorrect data reads.
     /// @dev 2 masks are used to enable use of a nested-if statement in execution for efficiency reasons
