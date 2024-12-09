@@ -51,6 +51,8 @@ abstract contract Dispatcher is
     /// @notice Decodes and executes the given command with the given inputs
     /// @param commandType The command type to execute
     /// @param inputs The inputs to execute the command with
+    /// @dev inputs must be ABI encoded using abi.encode() to ensure proper padding. WARNING: Direct calldata
+    //       manipulation or abi.encodePacked() can result in incorrect data reads.
     /// @dev 2 masks are used to enable use of a nested-if statement in execution for efficiency reasons
     /// @return success True on success of the command, false on failure
     /// @return output The outputs or error messages, if any, from the command
@@ -284,6 +286,8 @@ abstract contract Dispatcher is
                     (success, output) = address(V3_POSITION_MANAGER).call(inputs);
                     return (success, output);
                 } else if (command == Commands.V4_CL_INITIALIZE_POOL) {
+                    // equivalent: abi.decode(inputs, (PoolKey, uint160)) where PoolKey is
+                    // (Currency currency0, Currency currency1, IHooks hooks, IPoolManager poolManager, uint24 fee, bytes32 parameters)
                     PoolKey calldata poolKey;
                     uint160 sqrtPriceX96;
                     assembly {
@@ -293,6 +297,8 @@ abstract contract Dispatcher is
                     (success, output) =
                         address(clPoolManager).call(abi.encodeCall(ICLPoolManager.initialize, (poolKey, sqrtPriceX96)));
                 } else if (command == Commands.V4_BIN_INITIALIZE_POOL) {
+                    // equivalent: abi.decode(inputs, (PoolKey, uint24)) where PoolKey is
+                    // (Currency currency0, Currency currency1, IHooks hooks, IPoolManager poolManager, uint24 fee, bytes32 parameters)
                     PoolKey calldata poolKey;
                     uint24 activeId;
                     assembly {
