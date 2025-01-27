@@ -2,7 +2,6 @@
 pragma solidity ^0.8.15;
 
 import "forge-std/Test.sol";
-import {GasSnapshot} from "forge-gas-snapshot/GasSnapshot.sol";
 import {ERC20} from "solmate/src/tokens/ERC20.sol";
 import {IERC165} from "@openzeppelin/contracts/interfaces/IERC165.sol";
 import {ActionConstants} from "pancake-v4-periphery/src/libraries/ActionConstants.sol";
@@ -26,7 +25,7 @@ import {MockERC721} from "./mock/MockERC721.sol";
 import {MockERC1155} from "./mock/MockERC1155.sol";
 import {RouterParameters} from "../src/base/RouterImmutables.sol";
 
-contract UniversalRouterTest is Test, GasSnapshot, Permit2SignatureHelpers, DeployPermit2 {
+contract UniversalRouterTest is Test, Permit2SignatureHelpers, DeployPermit2 {
     using AddressBuilder for address[];
 
     error ContractSizeTooLarge(uint256 diff);
@@ -75,7 +74,8 @@ contract UniversalRouterTest is Test, GasSnapshot, Permit2SignatureHelpers, Depl
     }
 
     function test_bytecodeSize() public {
-        snapSize("UniversalRouterBytecodeSize", address(router));
+        vm.snapshotValue("UniversalRouterBytecodeSize", address(router).code.length);
+
         if (address(router).code.length > 24576) {
             revert ContractSizeTooLarge(address(router).code.length - 24576);
         }
@@ -113,7 +113,7 @@ contract UniversalRouterTest is Test, GasSnapshot, Permit2SignatureHelpers, Depl
         assertEq(erc20.balanceOf(RECIPIENT), 0);
 
         router.execute(commands, inputs);
-        snapLastCall("UniversalRouterTest#test_sweep_token");
+        vm.snapshotGasLastCall("test_sweep_token");
 
         assertEq(erc20.balanceOf(RECIPIENT), AMOUNT);
     }

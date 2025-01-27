@@ -2,7 +2,6 @@
 pragma solidity ^0.8.13;
 
 import {Test, console} from "forge-std/Test.sol";
-import {GasSnapshot} from "forge-gas-snapshot/GasSnapshot.sol";
 import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
 import {IWETH9} from "pancake-v4-periphery/src/interfaces/external/IWETH9.sol";
 import {WETH} from "solmate/src/tokens/WETH.sol";
@@ -123,9 +122,8 @@ contract CLNativePancakeSwapV4Test is BasePancakeSwapV4 {
         bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.V4_CL_INITIALIZE_POOL)));
         bytes[] memory inputs = new bytes[](1);
         inputs[0] = abi.encode(_poolKey, SQRT_PRICE_1_1);
-        snapStart("CLNativePancakeSwapV4Test#test_v4ClSwap_v4InitializeClPool");
         router.execute(commands, inputs);
-        snapEnd();
+        vm.snapshotGasLastCall("test_v4ClSwap_v4InitializeClPool");
 
         // verify
         (sqrtPriceX96,,,) = poolManager.getSlot0(_poolKey.toId());
@@ -159,9 +157,8 @@ contract CLNativePancakeSwapV4Test is BasePancakeSwapV4 {
         // gas would be higher as its the first swap
         assertEq(alice.balance, 0.01 ether);
         assertEq(token1.balanceOf(alice), 0 ether);
-        snapStart("CLNativePancakeSwapV4Test#test_v4ClSwap_ExactInSingle_NativeIn");
         router.execute{value: amountIn}(commands, inputs);
-        snapEnd();
+        vm.snapshotGasLastCall("test_v4ClSwap_ExactInSingle_NativeIn");
         assertEq(alice.balance, 0 ether);
         assertEq(token1.balanceOf(alice), 9969940541342903); // around 0.01 eth * 0.997 - slippage
     }
@@ -185,9 +182,8 @@ contract CLNativePancakeSwapV4Test is BasePancakeSwapV4 {
         // gas would be higher as its the first swap
         assertEq(alice.balance, 0 ether);
         assertEq(token1.balanceOf(alice), 0.01 ether);
-        snapStart("CLNativePancakeSwapV4Test#test_v4ClSwap_ExactInSingle_NativeOut");
         router.execute(commands, inputs);
-        snapEnd();
+        vm.snapshotGasLastCall("test_v4ClSwap_ExactInSingle_NativeOut");
         assertEq(alice.balance, 9969940541342903); // around 0.01 eth * 0.997 - slippage
         assertEq(token1.balanceOf(alice), 0);
     }
