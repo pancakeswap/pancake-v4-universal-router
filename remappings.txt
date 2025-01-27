@@ -7,4 +7,3 @@ pancake-v4-periphery/=lib/pancake-v4-periphery/
 pancake-v4-core/=lib/pancake-v4-periphery/lib/pancake-v4-core
 permit2/=lib/pancake-v4-periphery/lib/permit2/
 pancake-create3-factory/=lib/pancake-create3-factory/
-forge-gas-snapshot/=lib/forge-gas-snapshot/src/
