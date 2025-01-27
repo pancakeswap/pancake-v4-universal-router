@@ -2,7 +2,6 @@
 pragma solidity ^0.8.13;
 
 import {Test, console} from "forge-std/Test.sol";
-import {GasSnapshot} from "forge-gas-snapshot/GasSnapshot.sol";
 import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
 import {WETH} from "solmate/src/tokens/WETH.sol";
 import {IWETH9} from "pancake-v4-periphery/src/interfaces/external/IWETH9.sol";
@@ -118,9 +117,8 @@ contract BinNativePancakeSwapV4Test is BasePancakeSwapV4, BinLiquidityHelper {
         bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.V4_BIN_INITIALIZE_POOL)));
         bytes[] memory inputs = new bytes[](1);
         inputs[0] = abi.encode(_poolKey, ACTIVE_ID_1_1);
-        snapStart("BinNativePancakeSwapV4Test#test_v4BinSwap_v4InitializeBinPool");
         router.execute(commands, inputs);
-        snapEnd();
+        vm.snapshotGasLastCall("test_v4BinSwap_v4InitializeBinPool");
 
         // verify
         (activeId,,) = poolManager.getSlot0(_poolKey.toId());
@@ -153,9 +151,8 @@ contract BinNativePancakeSwapV4Test is BasePancakeSwapV4, BinLiquidityHelper {
 
         assertEq(alice.balance, 0.01 ether);
         assertEq(token1.balanceOf(alice), 0 ether);
-        snapStart("BinNativePancakeSwapV4Test#test_v4BinSwap_ExactInSingle_NativeIn");
         router.execute{value: amountIn}(commands, inputs);
-        snapEnd();
+        vm.snapshotGasLastCall("test_v4BinSwap_ExactInSingle_NativeIn");
         assertEq(alice.balance, 0 ether);
         assertEq(token1.balanceOf(alice), 9970000000000000); // 0.01 eth * 0.997
     }
@@ -178,9 +175,8 @@ contract BinNativePancakeSwapV4Test is BasePancakeSwapV4, BinLiquidityHelper {
 
         assertEq(alice.balance, 0 ether);
         assertEq(token1.balanceOf(alice), 0.01 ether);
-        snapStart("BinNativePancakeSwapV4Test#test_v4BinSwap_ExactInSingle_NativeIn");
         router.execute(commands, inputs);
-        snapEnd();
+        vm.snapshotGasLastCall("test_v4BinSwap_ExactInSingle_NativeOut");
         assertEq(alice.balance, 9970000000000000);
         assertEq(token1.balanceOf(alice), 0); // 0.01 eth * 0.997
     }
@@ -203,9 +199,8 @@ contract BinNativePancakeSwapV4Test is BasePancakeSwapV4, BinLiquidityHelper {
 
         assertEq(alice.balance, 0 ether);
         assertEq(token1.balanceOf(alice), 0.01 ether);
-        snapStart("BinNativePancakeSwapV4Test#test_v4BinSwap_ExactInSingle_NativeOut_RouterRecipient");
         router.execute(commands, inputs);
-        snapEnd();
+        vm.snapshotGasLastCall("test_v4BinSwap_ExactInSingle_NativeOut_RouterRecipient");
         assertEq(address(router).balance, 9970000000000000);
         assertEq(token1.balanceOf(alice), 0); // 0.01 eth * 0.997
     }

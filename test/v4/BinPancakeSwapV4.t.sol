@@ -2,7 +2,6 @@
 pragma solidity ^0.8.13;
 
 import {Test, console} from "forge-std/Test.sol";
-import {GasSnapshot} from "forge-gas-snapshot/GasSnapshot.sol";
 import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
 import {WETH} from "solmate/src/tokens/WETH.sol";
 import {IWETH9} from "pancake-v4-periphery/src/interfaces/external/IWETH9.sol";
@@ -142,9 +141,8 @@ contract BinPancakeSwapV4Test is BasePancakeSwapV4, BinLiquidityHelper {
         bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.V4_BIN_INITIALIZE_POOL)));
         bytes[] memory inputs = new bytes[](1);
         inputs[0] = abi.encode(_poolKey, ACTIVE_ID_1_1);
-        snapStart("BinPancakeSwapV4Test#test_v4BinSwap_InitializeBinPool");
         router.execute(commands, inputs);
-        snapEnd();
+        vm.snapshotGasLastCall("test_v4BinSwap_InitializeBinPool");
 
         // verify
         (activeId,,) = poolManager.getSlot0(_poolKey.toId());
@@ -177,9 +175,8 @@ contract BinPancakeSwapV4Test is BasePancakeSwapV4, BinLiquidityHelper {
 
         assertEq(token0.balanceOf(alice), 0.01 ether);
         assertEq(token1.balanceOf(alice), 0 ether);
-        snapStart("BinPancakeSwapV4Test#test_v4BinSwap_ExactInSingle");
         router.execute(commands, inputs);
-        snapEnd();
+        vm.snapshotGasLastCall("test_v4BinSwap_ExactInSingle");
         assertEq(token0.balanceOf(alice), 0 ether);
         assertEq(token1.balanceOf(alice), 9970000000000000); // 0.01 eth * 0.997
     }
@@ -211,9 +208,8 @@ contract BinPancakeSwapV4Test is BasePancakeSwapV4, BinLiquidityHelper {
         // gas would be higher as its the first swap
         assertEq(token0.balanceOf(alice), 0.01 ether);
         assertEq(token1.balanceOf(alice), 0 ether);
-        snapStart("BinPancakeSwapV4Test#test_v4BinSwap_ExactIn_SingleHop");
         router.execute(commands, inputs);
-        snapEnd();
+        vm.snapshotGasLastCall("test_v4BinSwap_ExactIn_SingleHop");
         assertEq(token0.balanceOf(alice), 0 ether);
         assertEq(token1.balanceOf(alice), 9970000000000000); // 0.01 eth * 0.997
     }
@@ -254,9 +250,8 @@ contract BinPancakeSwapV4Test is BasePancakeSwapV4, BinLiquidityHelper {
         // gas would be higher as its the first swap
         assertEq(token0.balanceOf(alice), 0.01 ether);
         assertEq(token2.balanceOf(alice), 0 ether);
-        snapStart("BinPancakeSwapV4Test#test_v4BinSwap_ExactIn_MultiHop");
         router.execute(commands, inputs);
-        snapEnd();
+        vm.snapshotGasLastCall("test_v4BinSwap_ExactIn_MultiHop");
         assertEq(token0.balanceOf(alice), 0 ether);
         assertEq(token2.balanceOf(alice), 9940090000000000); // around 0.01 eth - 0.3% fee twice
     }
@@ -280,9 +275,8 @@ contract BinPancakeSwapV4Test is BasePancakeSwapV4, BinLiquidityHelper {
         // gas would be higher as its the first swap
         assertEq(token0.balanceOf(alice), 0.02 ether);
         assertEq(token1.balanceOf(alice), 0 ether);
-        snapStart("BinPancakeSwapV4Test#test_v4ClSwap_ExactOutSingle");
         router.execute(commands, inputs);
-        snapEnd();
+        vm.snapshotGasLastCall("test_v4BinSwap_ExactOutSingle");
         assertEq(token0.balanceOf(alice), 9969909729187562); // around 0.02 eth - 0.01 eth - fee
         assertEq(token1.balanceOf(alice), 0.01 ether);
     }
@@ -315,9 +309,8 @@ contract BinPancakeSwapV4Test is BasePancakeSwapV4, BinLiquidityHelper {
         // gas would be higher as its the first swap
         assertEq(token0.balanceOf(alice), 0.02 ether);
         assertEq(token1.balanceOf(alice), 0 ether);
-        snapStart("BinPancakeSwapV4Test#test_v4BinSwap_ExactOut_SingleHop");
         router.execute(commands, inputs);
-        snapEnd();
+        vm.snapshotGasLastCall("test_v4BinSwap_ExactOut_SingleHop");
         assertEq(token0.balanceOf(alice), 9969909729187562); // around 0.02 eth - 0.01 eth - slippage
         assertEq(token1.balanceOf(alice), 0.01 ether);
     }
@@ -358,9 +351,8 @@ contract BinPancakeSwapV4Test is BasePancakeSwapV4, BinLiquidityHelper {
         // gas would be higher as its the first swap
         assertEq(token0.balanceOf(alice), 0.02 ether);
         assertEq(token2.balanceOf(alice), 0 ether);
-        snapStart("BinPancakeSwapV4Test#test_v4BinSwap_ExactOut_MultiHop");
         router.execute(commands, inputs);
-        snapEnd();
+        vm.snapshotGasLastCall("test_v4BinSwap_ExactOut_MultiHop");
         assertEq(token0.balanceOf(alice), 9939728915935368);
         assertEq(token2.balanceOf(alice), 0.01 ether);
     }

@@ -2,7 +2,6 @@
 pragma solidity ^0.8.15;
 
 import {Test, console} from "forge-std/Test.sol";
-import {GasSnapshot} from "forge-gas-snapshot/GasSnapshot.sol";
 import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
 import {IWETH9} from "pancake-v4-periphery/src/interfaces/external/IWETH9.sol";
 import {WETH} from "solmate/src/tokens/WETH.sol";
@@ -172,9 +171,8 @@ contract V3ToV4MigrationNativeTest is BasePancakeSwapV4, OldVersionHelper, BinLi
             abi.encodePacked(IPositionManager.modifyLiquidities.selector, abi.encode(planner.encode(), block.timestamp));
 
         vm.prank(alice);
-        snapStart("V3ToV4MigrationNativeTest#test_v4CLPositionmanager_Mint_Native");
         router.execute(commands, inputs);
-        snapEnd();
+        vm.snapshotGasLastCall("test_v4CLPositionmanager_Mint_Native");
 
         // verify remaining balance sent back to alice
         assertEq(alice.balance, 9994018262239490337);
@@ -216,9 +214,8 @@ contract V3ToV4MigrationNativeTest is BasePancakeSwapV4, OldVersionHelper, BinLi
             abi.encodePacked(IPositionManager.modifyLiquidities.selector, abi.encode(planner.encode(), block.timestamp));
 
         vm.prank(alice);
-        snapStart("V3ToV4MigrationTest#test_v4BinPositionmanager_BinAddLiquidity_Native");
         router.execute(commands, inputs);
-        snapEnd();
+        vm.snapshotGasLastCall("test_v4BinPositionmanager_BinAddLiquidity_Native");
 
         // verify remaining balance sent back to alice
         assertEq(alice.balance, 5 ether);

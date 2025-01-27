@@ -2,7 +2,6 @@
 pragma solidity ^0.8.13;
 
 import {Test, console} from "forge-std/Test.sol";
-import {GasSnapshot} from "forge-gas-snapshot/GasSnapshot.sol";
 import {ERC20} from "solmate/src/tokens/ERC20.sol";
 import {ActionConstants} from "pancake-v4-periphery/src/libraries/ActionConstants.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
@@ -16,7 +15,7 @@ import {IStableSwapFactory} from "../../src/interfaces/IStableSwapFactory.sol";
 import {IStableSwapInfo} from "../../src/interfaces/IStableSwapInfo.sol";
 import {StableSwapRouter} from "../../src/modules/pancakeswap/StableSwapRouter.sol";
 
-abstract contract StableSwapTest is Test, GasSnapshot {
+abstract contract StableSwapTest is Test {
     address constant RECIPIENT = address(10);
     uint256 constant AMOUNT = 1 ether;
     uint256 constant BALANCE = 100000 ether;
@@ -122,7 +121,7 @@ abstract contract StableSwapTest is Test, GasSnapshot {
         inputs[0] = abi.encode(ActionConstants.MSG_SENDER, AMOUNT, 0, path, flag(), true);
 
         router.execute(commands, inputs);
-        snapLastCall("StableSwapTest#test_stableSwap_ExactInput0For1");
+        vm.snapshotGasLastCall("test_stableSwap_ExactInput0For1");
         assertEq(ERC20(token0()).balanceOf(FROM), BALANCE - AMOUNT);
         assertGt(ERC20(token1()).balanceOf(FROM), BALANCE);
     }
@@ -138,7 +137,7 @@ abstract contract StableSwapTest is Test, GasSnapshot {
         inputs[0] = abi.encode(ActionConstants.MSG_SENDER, AMOUNT, 0, path, flag(), true);
 
         router.execute(commands, inputs);
-        snapLastCall("StableSwapTest#test_stableSwap_ExactInput1For0");
+        vm.snapshotGasLastCall("test_stableSwap_ExactInput1For0");
         assertEq(ERC20(token1()).balanceOf(FROM), BALANCE - AMOUNT);
         assertGt(ERC20(token0()).balanceOf(FROM), BALANCE);
     }

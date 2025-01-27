@@ -3,7 +3,6 @@ pragma solidity ^0.8.13;
 
 import {Test, console} from "forge-std/Test.sol";
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
-import {GasSnapshot} from "forge-gas-snapshot/GasSnapshot.sol";
 import {ERC20} from "solmate/src/tokens/ERC20.sol";
 import {DeployPermit2} from "permit2/test/utils/DeployPermit2.sol";
 import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
@@ -11,7 +10,7 @@ import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol"
 import {TokenFixture} from "pancake-v4-periphery/test/helpers/TokenFixture.sol";
 import {Currency} from "pancake-v4-core/src/types/Currency.sol";
 
-abstract contract BasePancakeSwapV4 is TokenFixture, Test, GasSnapshot, DeployPermit2 {
+abstract contract BasePancakeSwapV4 is TokenFixture, Test, DeployPermit2 {
     function _approvePermit2ForCurrency(address from, Currency currency, address to, IAllowanceTransfer permit2)
         internal
     {

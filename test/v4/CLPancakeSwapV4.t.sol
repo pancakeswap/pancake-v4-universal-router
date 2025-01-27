@@ -2,7 +2,6 @@
 pragma solidity ^0.8.13;
 
 import {Test, console} from "forge-std/Test.sol";
-import {GasSnapshot} from "forge-gas-snapshot/GasSnapshot.sol";
 import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
 import {IWETH9} from "pancake-v4-periphery/src/interfaces/external/IWETH9.sol";
 import {WETH} from "solmate/src/tokens/WETH.sol";
@@ -148,9 +147,8 @@ contract CLPancakeSwapV4Test is BasePancakeSwapV4 {
         bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.V4_CL_INITIALIZE_POOL)));
         bytes[] memory inputs = new bytes[](1);
         inputs[0] = abi.encode(_poolKey, SQRT_PRICE_1_1);
-        snapStart("CLPancakeSwapV4Test#test_v4ClSwap_v4InitializeClPool");
         router.execute(commands, inputs);
-        snapEnd();
+        vm.snapshotGasLastCall("test_v4ClSwap_v4InitializeClPool");
 
         // verify
         (sqrtPriceX96,,,) = poolManager.getSlot0(_poolKey.toId());
@@ -184,9 +182,8 @@ contract CLPancakeSwapV4Test is BasePancakeSwapV4 {
         // gas would be higher as its the first swap
         assertEq(token0.balanceOf(alice), 0.01 ether);
         assertEq(token1.balanceOf(alice), 0 ether);
-        snapStart("CLPancakeSwapV4Test#test_v4ClSwap_ExactInSingle");
         router.execute(commands, inputs);
-        snapEnd();
+        vm.snapshotGasLastCall("test_v4ClSwap_ExactInSingle");
         assertEq(token0.balanceOf(alice), 0 ether);
         assertEq(token1.balanceOf(alice), 9969940541342903); // around 0.01 eth * 0.997 - slippage
     }
@@ -219,9 +216,8 @@ contract CLPancakeSwapV4Test is BasePancakeSwapV4 {
         // gas would be higher as its the first swap
         assertEq(token0.balanceOf(alice), 0.01 ether);
         assertEq(token1.balanceOf(alice), 0 ether);
-        snapStart("CLPancakeSwapV4Test#test_v4ClSwap_ExactIn_SingleHop");
         router.execute(commands, inputs);
-        snapEnd();
+        vm.snapshotGasLastCall("test_v4ClSwap_ExactIn_SingleHop");
         assertEq(token0.balanceOf(alice), 0 ether);
         assertEq(token1.balanceOf(alice), 9969940541342903); // around 0.01 eth * 0.997 - slippage
     }
@@ -262,9 +258,8 @@ contract CLPancakeSwapV4Test is BasePancakeSwapV4 {
         // gas would be higher as its the first swap
         assertEq(token0.balanceOf(alice), 0.01 ether);
         assertEq(token2.balanceOf(alice), 0 ether);
-        snapStart("CLPancakeSwapV4Test#test_v4ClSwap_ExactIn_MultiHop");
         router.execute(commands, inputs);
-        snapEnd();
+        vm.snapshotGasLastCall("test_v4ClSwap_ExactIn_MultiHop");
         assertEq(token0.balanceOf(alice), 0 ether);
         assertEq(token2.balanceOf(alice), 9939971617982475); // around 0.01 eth - fee/slippage
     }
@@ -288,9 +283,8 @@ contract CLPancakeSwapV4Test is BasePancakeSwapV4 {
         // gas would be higher as its the first swap
         assertEq(token0.balanceOf(alice), 0.02 ether);
         assertEq(token1.balanceOf(alice), 0 ether);
-        snapStart("CLPancakeSwapV4Test#test_v4ClSwap_ExactOutSingle");
         router.execute(commands, inputs);
-        snapEnd();
+        vm.snapshotGasLastCall("test_v4ClSwap_ExactOutSingle");
         assertEq(token0.balanceOf(alice), 9969849731458956); // around 0.02 eth - 0.01 eth - slippage
         assertEq(token1.balanceOf(alice), 0.01 ether);
     }
@@ -323,9 +317,8 @@ contract CLPancakeSwapV4Test is BasePancakeSwapV4 {
         // gas would be higher as its the first swap
         assertEq(token0.balanceOf(alice), 0.02 ether);
         assertEq(token1.balanceOf(alice), 0 ether);
-        snapStart("CLPancakeSwapV4Test#test_v4ClSwap_ExactOut_SingleHop");
         router.execute(commands, inputs);
-        snapEnd();
+        vm.snapshotGasLastCall("test_v4ClSwap_ExactOut_SingleHop");
         assertEq(token0.balanceOf(alice), 9969849731458956); // around 0.02 eth - 0.01 eth - slippage
         assertEq(token1.balanceOf(alice), 0.01 ether);
     }
@@ -366,9 +359,8 @@ contract CLPancakeSwapV4Test is BasePancakeSwapV4 {
         // gas would be higher as its the first swap
         assertEq(token0.balanceOf(alice), 0.02 ether);
         assertEq(token2.balanceOf(alice), 0 ether);
-        snapStart("CLPancakeSwapV4Test#test_v4ClSwap_ExactOut_MultiHop");
         router.execute(commands, inputs);
-        snapEnd();
+        vm.snapshotGasLastCall("test_v4ClSwap_ExactOut_MultiHop");
         assertEq(token0.balanceOf(alice), 9939608377607349);
         assertEq(token2.balanceOf(alice), 0.01 ether);
     }

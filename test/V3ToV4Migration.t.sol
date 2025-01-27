@@ -2,7 +2,6 @@
 pragma solidity ^0.8.15;
 
 import {Test, console} from "forge-std/Test.sol";
-import {GasSnapshot} from "forge-gas-snapshot/GasSnapshot.sol";
 import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
 import {IWETH9} from "pancake-v4-periphery/src/interfaces/external/IWETH9.sol";
 import {WETH} from "solmate/src/tokens/WETH.sol";
@@ -276,9 +275,8 @@ contract V3ToV4MigrationTest is BasePancakeSwapV4, OldVersionHelper, BinLiquidit
         inputs[2] = abi.encodePacked(IV3NonfungiblePositionManager.collect.selector, abi.encode(collectParam));
         inputs[3] = abi.encodePacked(IV3NonfungiblePositionManager.burn.selector, abi.encode(v3TokenId));
 
-        snapStart("V3ToV4MigrationTest#test_v3PositionManager_burn");
         router.execute(commands, inputs);
-        snapEnd();
+        vm.snapshotGasLastCall("test_v3PositionManager_burn");
 
         // after: verify token0/token1 balance in router
         assertEq(token0.balanceOf(address(router)), 9999999999999999999);
@@ -379,9 +377,8 @@ contract V3ToV4MigrationTest is BasePancakeSwapV4, OldVersionHelper, BinLiquidit
             abi.encodePacked(IPositionManager.modifyLiquidities.selector, abi.encode(planner.encode(), block.timestamp));
 
         vm.prank(alice);
-        snapStart("V3ToV4MigrationTest#test_v4CLPositionmanager_Mint");
         router.execute(commands, inputs);
-        snapEnd();
+        vm.snapshotGasLastCall("test_v4CLPositionmanager_Mint");
 
         // verify balance sent back to alice
         assertEq(token0.balanceOf(address(alice)), 9994018262239490337);
@@ -419,9 +416,8 @@ contract V3ToV4MigrationTest is BasePancakeSwapV4, OldVersionHelper, BinLiquidit
             abi.encodePacked(IPositionManager.modifyLiquidities.selector, abi.encode(planner.encode(), block.timestamp));
 
         vm.prank(alice);
-        snapStart("V3ToV4MigrationTest#test_v4BinPositionmanager_BinAddLiquidity");
         router.execute(commands, inputs);
-        snapEnd();
+        vm.snapshotGasLastCall("test_v4BinPositionmanager_BinAddLiquidity");
 
         // verify balance sent back to alice
         assertEq(token0.balanceOf(address(alice)), 5 ether);

@@ -2,7 +2,6 @@
 pragma solidity ^0.8.13;
 
 import {Test, console} from "forge-std/Test.sol";
-import {GasSnapshot} from "forge-gas-snapshot/GasSnapshot.sol";
 import {ERC20} from "solmate/src/tokens/ERC20.sol";
 import {ActionConstants} from "pancake-v4-periphery/src/libraries/ActionConstants.sol";
 
@@ -17,7 +16,7 @@ import {Commands} from "../../src/libraries/Commands.sol";
 import {RouterParameters} from "../../src/base/RouterImmutables.sol";
 
 /// @dev fork test against BSC network at block 38560000
-abstract contract PancakeSwapV3Test is Test, GasSnapshot {
+abstract contract PancakeSwapV3Test is Test {
     address constant RECIPIENT = address(10);
     uint256 constant AMOUNT = 1 ether;
     uint256 constant BALANCE = 100_000 ether;
@@ -77,7 +76,7 @@ abstract contract PancakeSwapV3Test is Test, GasSnapshot {
         inputs[0] = abi.encode(ActionConstants.MSG_SENDER, AMOUNT, 0, path, true);
 
         router.execute(commands, inputs);
-        snapLastCall("PancakeSwapV3Test#test_v3Swap_ExactInput0For1");
+        vm.snapshotGasLastCall("test_v3Swap_ExactInput0For1");
         assertEq(ERC20(token0()).balanceOf(FROM), BALANCE - AMOUNT);
         assertGt(ERC20(token1()).balanceOf(FROM), BALANCE);
     }
@@ -105,7 +104,7 @@ abstract contract PancakeSwapV3Test is Test, GasSnapshot {
         inputs[0] = abi.encode(ActionConstants.MSG_SENDER, ActionConstants.CONTRACT_BALANCE, 0, path, true);
 
         router.execute(commands, inputs);
-        snapLastCall("PancakeSwapV3Test#test_v3Swap_ExactInput0For1_ContractBalance");
+        vm.snapshotGasLastCall("test_v3Swap_ExactInput0For1_ContractBalance");
         assertEq(ERC20(token0()).balanceOf(FROM), BALANCE - 1 ether);
         assertGt(ERC20(token1()).balanceOf(FROM), BALANCE);
     }
@@ -117,7 +116,7 @@ abstract contract PancakeSwapV3Test is Test, GasSnapshot {
         inputs[0] = abi.encode(ActionConstants.MSG_SENDER, AMOUNT, 0, path, true);
 
         router.execute(commands, inputs);
-        snapLastCall("PancakeSwapV3Test#test_v3Swap_exactInput_MultiHop");
+        vm.snapshotGasLastCall("test_v3Swap_exactInput_MultiHop");
         assertEq(ERC20(token0()).balanceOf(FROM), BALANCE - AMOUNT);
         assertEq(ERC20(token1()).balanceOf(FROM), BALANCE);
         assertGt(ERC20(token2()).balanceOf(FROM), BALANCE);
@@ -154,7 +153,7 @@ abstract contract PancakeSwapV3Test is Test, GasSnapshot {
         inputs[0] = abi.encode(ActionConstants.MSG_SENDER, AMOUNT, type(uint256).max, path, true);
 
         router.execute(commands, inputs);
-        snapLastCall("PancakeSwapV3Test#test_v3Swap_exactOutput0For1");
+        vm.snapshotGasLastCall("test_v3Swap_exactOutput0For1");
         assertLt(ERC20(token0()).balanceOf(FROM), BALANCE);
         assertGe(ERC20(token1()).balanceOf(FROM), BALANCE + AMOUNT);
     }
@@ -181,7 +180,7 @@ abstract contract PancakeSwapV3Test is Test, GasSnapshot {
         inputs[0] = abi.encode(ActionConstants.MSG_SENDER, AMOUNT, type(uint256).max, path, true);
 
         router.execute(commands, inputs);
-        snapLastCall("PancakeSwapV3Test#test_v3Swap_exactOutput_MultiHop");
+        vm.snapshotGasLastCall("test_v3Swap_exactOutput_MultiHop");
         assertLt(ERC20(token0()).balanceOf(FROM), BALANCE);
         assertEq(ERC20(token1()).balanceOf(FROM), BALANCE);
         assertGe(ERC20(token2()).balanceOf(FROM), BALANCE + AMOUNT);
