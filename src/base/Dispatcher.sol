@@ -272,6 +272,7 @@ abstract contract Dispatcher is
             } else {
                 // 0x10 <= command < 0x21
                 if (command == Commands.V4_SWAP) {
+                    // TODO CONFIRM: it's always a success here
                     // pass the calldata provided to V4SwapRouter._executeActions (defined in BaseActionsRouter)
                     _executeActions(inputs);
                     return (success, output);
