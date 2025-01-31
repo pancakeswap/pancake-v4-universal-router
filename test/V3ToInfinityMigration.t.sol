@@ -35,7 +35,7 @@ import {BinLiquidityHelper} from "infinity-periphery/test/pool-bin/helper/BinLiq
 
 import {IPancakeV3PoolDeployer} from "../src/modules/pancakeswap/v3/interfaces/IPancakeV3PoolDeployer.sol";
 import {IPancakeV3Factory} from "../src/modules/pancakeswap/v3/interfaces/IPancakeV3Factory.sol";
-import {V3ToInfiMigrator} from "../src/modules/V3ToInfiMigrator.sol";
+import {V3ToInfinityMigrator} from "../src/modules/V3ToInfinityMigrator.sol";
 import {IUniversalRouter} from "../src/interfaces/IUniversalRouter.sol";
 import {Commands} from "../src/libraries/Commands.sol";
 import {RouterParameters} from "../src/base/RouterImmutables.sol";
@@ -47,7 +47,7 @@ interface IPancakeV3LikePairFactory {
     function createPool(address tokenA, address tokenB, uint24 fee) external returns (address pool);
 }
 
-contract V3ToInfiMigrationTest is BasePancakeSwapInfinity, OldVersionHelper, BinLiquidityHelper {
+contract V3ToInfinityMigrationTest is BasePancakeSwapInfinity, OldVersionHelper, BinLiquidityHelper {
     using BinPoolParametersHelper for bytes32;
     using CLPoolParametersHelper for bytes32;
     using Planner for Plan;
@@ -188,7 +188,7 @@ contract V3ToInfiMigrationTest is BasePancakeSwapInfinity, OldVersionHelper, Bin
         bytes[] memory inputs = new bytes[](1);
         inputs[0] = abi.encodePacked(IV3NonfungiblePositionManager.collect.selector, abi.encode(params));
 
-        vm.expectRevert(abi.encodeWithSelector(V3ToInfiMigrator.NotAuthorizedForToken.selector, params.tokenId));
+        vm.expectRevert(abi.encodeWithSelector(V3ToInfinityMigrator.NotAuthorizedForToken.selector, params.tokenId));
         router.execute(commands, inputs);
     }
 
@@ -212,7 +212,9 @@ contract V3ToInfiMigrationTest is BasePancakeSwapInfinity, OldVersionHelper, Bin
         inputs[0] = abi.encodePacked(IV3NonfungiblePositionManager.mint.selector, abi.encode(params));
 
         vm.expectRevert(
-            abi.encodeWithSelector(V3ToInfiMigrator.InvalidAction.selector, IV3NonfungiblePositionManager.mint.selector)
+            abi.encodeWithSelector(
+                V3ToInfinityMigrator.InvalidAction.selector, IV3NonfungiblePositionManager.mint.selector
+            )
         );
         router.execute(commands, inputs);
     }
@@ -292,7 +294,7 @@ contract V3ToInfiMigrationTest is BasePancakeSwapInfinity, OldVersionHelper, Bin
 
         bytes4 invalidSelector = IPositionManager.modifyLiquiditiesWithoutLock.selector;
         inputs[0] = abi.encodePacked(invalidSelector, abi.encode(planner.encode(), block.timestamp));
-        vm.expectRevert(abi.encodeWithSelector(V3ToInfiMigrator.InvalidAction.selector, invalidSelector));
+        vm.expectRevert(abi.encodeWithSelector(V3ToInfinityMigrator.InvalidAction.selector, invalidSelector));
         router.execute(commands, inputs);
     }
 
@@ -313,7 +315,7 @@ contract V3ToInfiMigrationTest is BasePancakeSwapInfinity, OldVersionHelper, Bin
             );
 
             // verify revert for invalid actions
-            vm.expectRevert(V3ToInfiMigrator.OnlyMintAllowed.selector);
+            vm.expectRevert(V3ToInfinityMigrator.OnlyMintAllowed.selector);
             router.execute(commands, inputs);
         }
     }
@@ -327,7 +329,7 @@ contract V3ToInfiMigrationTest is BasePancakeSwapInfinity, OldVersionHelper, Bin
 
         bytes4 invalidSelector = IPositionManager.modifyLiquiditiesWithoutLock.selector;
         inputs[0] = abi.encodePacked(invalidSelector, abi.encode(planner.encode(), block.timestamp));
-        vm.expectRevert(abi.encodeWithSelector(V3ToInfiMigrator.InvalidAction.selector, invalidSelector));
+        vm.expectRevert(abi.encodeWithSelector(V3ToInfinityMigrator.InvalidAction.selector, invalidSelector));
         router.execute(commands, inputs);
     }
 
@@ -346,7 +348,7 @@ contract V3ToInfiMigrationTest is BasePancakeSwapInfinity, OldVersionHelper, Bin
             );
 
             // verify revert for invalid actions
-            vm.expectRevert(V3ToInfiMigrator.OnlyAddLiqudityAllowed.selector);
+            vm.expectRevert(V3ToInfinityMigrator.OnlyAddLiqudityAllowed.selector);
             router.execute(commands, inputs);
         }
     }

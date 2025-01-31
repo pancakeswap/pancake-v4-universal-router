@@ -46,7 +46,7 @@ interface IPancakeV3LikePairFactory {
 }
 
 /// @dev Test simplified, assume weth-token pair is already broken and token reside in universal router
-contract V3ToInfiMigrationNativeTest is BasePancakeSwapInfinity, OldVersionHelper, BinLiquidityHelper {
+contract V3ToInfinityMigrationNativeTest is BasePancakeSwapInfinity, OldVersionHelper, BinLiquidityHelper {
     using BinPoolParametersHelper for bytes32;
     using CLPoolParametersHelper for bytes32;
     using Planner for Plan;

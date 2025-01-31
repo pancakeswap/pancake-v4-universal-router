@@ -10,9 +10,9 @@ import {CalldataDecoder} from "infinity-periphery/src/libraries/CalldataDecoder.
 import {IPositionManager} from "infinity-periphery/src/interfaces/IPositionManager.sol";
 import {IERC721Permit} from "infinity-periphery/src/interfaces/IERC721Permit.sol";
 
-/// @title V3 to Infi Migrator
-/// @notice A contract that migrates liquidity from PancakeSwap V3 to Infi
-abstract contract V3ToInfiMigrator is RouterImmutables {
+/// @title V3 to Infinity Migrator
+/// @notice A contract that migrates liquidity from PancakeSwap V3 to Infinity
+abstract contract V3ToInfinityMigrator is RouterImmutables {
     using CalldataDecoder for bytes;
 
     error NotAuthorizedForToken(uint256 tokenId);
