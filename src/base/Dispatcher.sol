@@ -3,7 +3,7 @@ pragma solidity ^0.8.24;
 
 import {V2SwapRouter} from "../modules/pancakeswap/v2/V2SwapRouter.sol";
 import {V3SwapRouter} from "../modules/pancakeswap/v3/V3SwapRouter.sol";
-import {V4SwapRouter} from "../modules/pancakeswap/v4/V4SwapRouter.sol";
+import {InfinitySwapRouter} from "../modules/pancakeswap/infinity/InfinitySwapRouter.sol";
 import {StableSwapRouter} from "../modules/pancakeswap/StableSwapRouter.sol";
 import {Payments} from "../modules/Payments.sol";
 import {RouterImmutables} from "../base/RouterImmutables.sol";
@@ -27,7 +27,7 @@ abstract contract Dispatcher is
     V2SwapRouter,
     V3SwapRouter,
     StableSwapRouter,
-    V4SwapRouter,
+    InfinitySwapRouter,
     V3ToV4Migrator,
     Lock
 {
@@ -272,7 +272,7 @@ abstract contract Dispatcher is
             } else {
                 // 0x10 <= command < 0x21
                 if (command == Commands.V4_SWAP) {
-                    // pass the calldata provided to V4SwapRouter._executeActions (defined in BaseActionsRouter)
+                    // pass the calldata provided to InfinitySwapRouter._executeActions (defined in BaseActionsRouter)
                     _executeActions(inputs);
                     return (success, output);
                     // This contract MUST be approved to spend the token since its going to be doing the call on the position manager
@@ -308,12 +308,12 @@ abstract contract Dispatcher is
                     (success, output) =
                         address(binPoolManager).call(abi.encodeCall(IBinPoolManager.initialize, (poolKey, activeId)));
                 } else if (command == Commands.V4_CL_POSITION_CALL) {
-                    _checkV4ClPositionManagerCall(inputs);
-                    (success, output) = address(V4_CL_POSITION_MANAGER).call{value: address(this).balance}(inputs);
+                    _checkInfiClPositionManagerCall(inputs);
+                    (success, output) = address(INFI_CL_POSITION_MANAGER).call{value: address(this).balance}(inputs);
                     return (success, output);
                 } else if (command == Commands.V4_BIN_POSITION_CALL) {
-                    _checkV4BinPositionManagerCall(inputs);
-                    (success, output) = address(V4_BIN_POSITION_MANAGER).call{value: address(this).balance}(inputs);
+                    _checkInfiBinPositionManagerCall(inputs);
+                    (success, output) = address(INFI_BIN_POSITION_MANAGER).call{value: address(this).balance}(inputs);
                     return (success, output);
                 } else {
                     // placeholder area for commands 0x15-0x20

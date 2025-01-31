@@ -5,7 +5,7 @@ pragma solidity 0.8.26;
 // Command implementations
 import {Dispatcher} from "./base/Dispatcher.sol";
 import {RouterParameters, RouterImmutables} from "./base/RouterImmutables.sol";
-import {V4SwapRouter} from "./modules/pancakeswap/v4/V4SwapRouter.sol";
+import {InfinitySwapRouter} from "./modules/pancakeswap/infinity/InfinitySwapRouter.sol";
 import {Commands} from "./libraries/Commands.sol";
 import {Constants} from "./libraries/Constants.sol";
 import {IUniversalRouter} from "./interfaces/IUniversalRouter.sol";
@@ -16,7 +16,7 @@ contract UniversalRouter is RouterImmutables, IUniversalRouter, Dispatcher, Paus
     constructor(RouterParameters memory params)
         RouterImmutables(params)
         StableSwapRouter(params.stableFactory, params.stableInfo)
-        V4SwapRouter(params.v4Vault, params.v4ClPoolManager, params.v4BinPoolManager)
+        InfinitySwapRouter(params.infiVault, params.infiClPoolManager, params.infiBinPoolManager)
     {}
 
     modifier checkDeadline(uint256 deadline) {

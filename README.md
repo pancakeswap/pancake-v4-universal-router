@@ -1,4 +1,4 @@
-# Pancake v4 universal-router
+# Infinity universal-router
 
 ## Running test
 
@@ -6,7 +6,7 @@
 
 2. Grab a RPC (eg. from nodereal) with history 
 ```bash
-// testnet fork test for v4, mainnet fork test for v2/v3 
+// testnet fork test for infinity, mainnet fork test for v2/v3 
 export FORK_URL=https://bsc-mainnet.nodereal.io/v1/xxx
 export TESTNET_FORK_URL=https://bsc-testnet.nodereal.io/v1/xxx
 ```

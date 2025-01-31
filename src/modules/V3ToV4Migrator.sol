@@ -8,7 +8,7 @@ import {IV3NonfungiblePositionManager} from
 import {Actions} from "infinity-periphery/src/libraries/Actions.sol";
 import {CalldataDecoder} from "infinity-periphery/src/libraries/CalldataDecoder.sol";
 import {IPositionManager} from "infinity-periphery/src/interfaces/IPositionManager.sol";
-import {IERC721Permit} from "infinity-periphery/src/pool-cl/interfaces/IERC721Permit.sol";
+import {IERC721Permit} from "infinity-periphery/src/interfaces/IERC721Permit.sol";
 
 /// @title V3 to V4 Migrator
 /// @notice A contract that migrates liquidity from PancakeSwap V3 to V4
@@ -71,16 +71,16 @@ abstract contract V3ToV4Migrator is RouterImmutables {
         }
     }
 
-    /// @dev check that the v4 position manager call is a safe call
+    /// @dev check that the cl position manager call is a safe call
     /// of the position-altering Actions, we only allow Actions.MINT
     /// this is because, if a user could be tricked into approving the UniversalRouter for
     /// their position, an attacker could take their fees, or drain their entire position
-    function _checkV4ClPositionManagerCall(bytes calldata inputs) internal view {
+    function _checkInfiClPositionManagerCall(bytes calldata inputs) internal view {
         bytes4 selector;
         assembly {
             selector := calldataload(inputs.offset)
         }
-        if (selector != V4_CL_POSITION_MANAGER.modifyLiquidities.selector) {
+        if (selector != INFI_CL_POSITION_MANAGER.modifyLiquidities.selector) {
             revert InvalidAction(selector);
         }
 
@@ -105,16 +105,16 @@ abstract contract V3ToV4Migrator is RouterImmutables {
         }
     }
 
-    /// @dev check that the v4 position manager call is a safe call
+    /// @dev check that the bin position manager call is a safe call
     /// of the position-altering Actions, we only allow Actions.BIN_ADD_LIQUIDITY
     /// this is because, if a user could be tricked into approving the UniversalRouter for
     /// their position, an attacker could drain their entire position
-    function _checkV4BinPositionManagerCall(bytes calldata inputs) internal view {
+    function _checkInfiBinPositionManagerCall(bytes calldata inputs) internal view {
         bytes4 selector;
         assembly {
             selector := calldataload(inputs.offset)
         }
-        if (selector != V4_BIN_POSITION_MANAGER.modifyLiquidities.selector) {
+        if (selector != INFI_BIN_POSITION_MANAGER.modifyLiquidities.selector) {
             revert InvalidAction(selector);
         }
 

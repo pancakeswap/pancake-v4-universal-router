@@ -1,0 +1,6 @@
+{
+  "test_v4BinSwap_ExactInSingle_NativeIn": "128929",
+  "test_v4BinSwap_ExactInSingle_NativeOut": "117627",
+  "test_v4BinSwap_ExactInSingle_NativeOut_RouterRecipient": "117916",
+  "test_v4BinSwap_v4InitializeBinPool": "132846"
+}

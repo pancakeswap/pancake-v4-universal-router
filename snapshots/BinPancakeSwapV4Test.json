@@ -1,9 +1,0 @@
-{
-  "test_v4BinSwap_ExactInSingle": "143507",
-  "test_v4BinSwap_ExactIn_MultiHop": "174901",
-  "test_v4BinSwap_ExactIn_SingleHop": "145305",
-  "test_v4BinSwap_ExactOutSingle": "147869",
-  "test_v4BinSwap_ExactOut_MultiHop": "178749",
-  "test_v4BinSwap_ExactOut_SingleHop": "149677",
-  "test_v4BinSwap_InitializeBinPool": "152986"
-}

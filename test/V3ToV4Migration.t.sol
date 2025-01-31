@@ -27,7 +27,7 @@ import {BinPositionManager} from "infinity-periphery/src/pool-bin/BinPositionMan
 import {Actions} from "infinity-periphery/src/libraries/Actions.sol";
 import {IV3NonfungiblePositionManager} from
     "infinity-periphery/src/interfaces/external/IV3NonfungiblePositionManager.sol";
-import {IERC721Permit} from "infinity-periphery/src/pool-cl/interfaces/IERC721Permit.sol";
+import {IERC721Permit} from "infinity-periphery/src/interfaces/IERC721Permit.sol";
 import {IPositionManager} from "infinity-periphery/src/interfaces/IPositionManager.sol";
 import {IBinPositionManager} from "infinity-periphery/src/pool-bin/interfaces/IBinPositionManager.sol";
 import {OldVersionHelper} from "infinity-periphery/test/helpers/OldVersionHelper.sol";
@@ -41,13 +41,13 @@ import {Commands} from "../src/libraries/Commands.sol";
 import {RouterParameters} from "../src/base/RouterImmutables.sol";
 import {Dispatcher} from "../src/base/Dispatcher.sol";
 import {UniversalRouter} from "../src/UniversalRouter.sol";
-import {BasePancakeSwapV4} from "./v4/BasePancakeSwapV4.sol";
+import {BasePancakeSwapInfinity} from "./infinity/BasePancakeSwapInfinity.sol";
 
 interface IPancakeV3LikePairFactory {
     function createPool(address tokenA, address tokenB, uint24 fee) external returns (address pool);
 }
 
-contract V3ToV4MigrationTest is BasePancakeSwapV4, OldVersionHelper, BinLiquidityHelper {
+contract V3ToV4MigrationTest is BasePancakeSwapInfinity, OldVersionHelper, BinLiquidityHelper {
     using BinPoolParametersHelper for bytes32;
     using CLPoolParametersHelper for bytes32;
     using Planner for Plan;
@@ -125,7 +125,7 @@ contract V3ToV4MigrationTest is BasePancakeSwapV4, OldVersionHelper, BinLiquidit
         _approvePermit2ForCurrency(address(this), currency1, address(binPositionManager), permit2);
 
         CLPositionDescriptorOffChain pd =
-            new CLPositionDescriptorOffChain("https://pancakeswap.finance/v4/pool-cl/positions/");
+            new CLPositionDescriptorOffChain("https://pancakeswap.finance/infinity/pool-cl/positions/");
         clPositionManager = new CLPositionManager(vault, clPoolManager, permit2, 100_000, pd, IWETH9(address(weth)));
         _approvePermit2ForCurrency(address(this), currency0, address(clPositionManager), permit2);
         _approvePermit2ForCurrency(address(this), currency1, address(clPositionManager), permit2);
@@ -163,12 +163,12 @@ contract V3ToV4MigrationTest is BasePancakeSwapV4, OldVersionHelper, BinLiquidit
             v3InitCodeHash: bytes32(0),
             stableFactory: address(0),
             stableInfo: address(0),
-            v4Vault: address(vault),
-            v4ClPoolManager: address(clPoolManager),
-            v4BinPoolManager: address(binPoolManager),
+            infiVault: address(vault),
+            infiClPoolManager: address(clPoolManager),
+            infiBinPoolManager: address(binPoolManager),
             v3NFTPositionManager: address(v3Nfpm),
-            v4ClPositionManager: address(clPositionManager),
-            v4BinPositionManager: address(binPositionManager)
+            infiClPositionManager: address(clPositionManager),
+            infiBinPositionManager: address(binPositionManager)
         });
         router = new UniversalRouter(params);
         _approvePermit2ForCurrency(alice, currency0, address(router), permit2);

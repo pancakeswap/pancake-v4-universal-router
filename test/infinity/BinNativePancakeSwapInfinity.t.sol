@@ -25,15 +25,15 @@ import {IBinPositionManager} from "infinity-periphery/src/pool-bin/interfaces/IB
 import {PathKey} from "infinity-periphery/src/libraries/PathKey.sol";
 import {BinPool} from "infinity-core/src/pool-bin/libraries/BinPool.sol";
 
-import {BasePancakeSwapV4} from "./BasePancakeSwapV4.sol";
+import {BasePancakeSwapInfinity} from "./BasePancakeSwapInfinity.sol";
 import {UniversalRouter} from "../../src/UniversalRouter.sol";
 import {IUniversalRouter} from "../../src/interfaces/IUniversalRouter.sol";
 import {Constants} from "../../src/libraries/Constants.sol";
 import {Commands} from "../../src/libraries/Commands.sol";
 import {RouterParameters} from "../../src/base/RouterImmutables.sol";
 
-/// @dev similar to BinPancakeSwapV4, except focus on native ETH transfers
-contract BinNativePancakeSwapV4Test is BasePancakeSwapV4, BinLiquidityHelper {
+/// @dev similar to BinPancakeSwapInfinity, except focus on native ETH transfers
+contract BinNativePancakeSwapInfinityTest is BasePancakeSwapInfinity, BinLiquidityHelper {
     using BinPoolParametersHelper for bytes32;
     using Planner for Plan;
 
@@ -76,12 +76,12 @@ contract BinNativePancakeSwapV4Test is BasePancakeSwapV4, BinLiquidityHelper {
             v3InitCodeHash: bytes32(0),
             stableFactory: address(0),
             stableInfo: address(0),
-            v4Vault: address(vault),
-            v4ClPoolManager: address(0),
-            v4BinPoolManager: address(poolManager),
+            infiVault: address(vault),
+            infiClPoolManager: address(0),
+            infiBinPoolManager: address(poolManager),
             v3NFTPositionManager: address(0),
-            v4ClPositionManager: address(0),
-            v4BinPositionManager: address(positionManager)
+            infiClPositionManager: address(0),
+            infiBinPositionManager: address(positionManager)
         });
         router = new UniversalRouter(params);
         _approvePermit2ForCurrency(alice, currency1, address(router), permit2);

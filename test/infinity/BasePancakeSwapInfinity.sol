@@ -10,7 +10,7 @@ import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol"
 import {TokenFixture} from "infinity-periphery/test/helpers/TokenFixture.sol";
 import {Currency} from "infinity-core/src/types/Currency.sol";
 
-abstract contract BasePancakeSwapV4 is TokenFixture, Test, DeployPermit2 {
+abstract contract BasePancakeSwapInfinity is TokenFixture, Test, DeployPermit2 {
     function _approvePermit2ForCurrency(address from, Currency currency, address to, IAllowanceTransfer permit2)
         internal
     {

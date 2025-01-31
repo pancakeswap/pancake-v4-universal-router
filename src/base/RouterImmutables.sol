@@ -20,14 +20,14 @@ struct RouterParameters {
     bytes32 v3InitCodeHash;
     address stableFactory;
     address stableInfo;
-    // PCS v4 swapping parameters, param not in this contract as stored in v4SwapRouter
-    address v4Vault;
-    address v4ClPoolManager;
-    address v4BinPoolManager;
-    // PCS v3->v4 migration parameters
+    // PCS infinity swapping parameters, param not in this contract as stored in infiSwapRouter
+    address infiVault;
+    address infiClPoolManager;
+    address infiBinPoolManager;
+    // PCS v3->infinity migration parameters
     address v3NFTPositionManager;
-    address v4ClPositionManager;
-    address v4BinPositionManager;
+    address infiClPositionManager;
+    address infiBinPositionManager;
 }
 
 /// @title Router Immutable Storage contract
@@ -57,11 +57,11 @@ contract RouterImmutables {
     /// @dev v3PositionManager address
     IV3NonfungiblePositionManager public immutable V3_POSITION_MANAGER;
 
-    /// @dev v4 CLPositionManager address
-    IPositionManager public immutable V4_CL_POSITION_MANAGER;
+    /// @dev infinity CLPositionManager address
+    IPositionManager public immutable INFI_CL_POSITION_MANAGER;
 
-    /// @dev v4 BinPositionManager address
-    IPositionManager public immutable V4_BIN_POSITION_MANAGER;
+    /// @dev infinity BinPositionManager address
+    IPositionManager public immutable INFI_BIN_POSITION_MANAGER;
 
     constructor(RouterParameters memory params) {
         PERMIT2 = IPermit2(params.permit2);
@@ -72,7 +72,7 @@ contract RouterImmutables {
         PANCAKESWAP_V3_POOL_INIT_CODE_HASH = params.v3InitCodeHash;
         PANCAKESWAP_V3_DEPLOYER = params.v3Deployer;
         V3_POSITION_MANAGER = IV3NonfungiblePositionManager(params.v3NFTPositionManager);
-        V4_CL_POSITION_MANAGER = IPositionManager(params.v4ClPositionManager);
-        V4_BIN_POSITION_MANAGER = IPositionManager(params.v4BinPositionManager);
+        INFI_CL_POSITION_MANAGER = IPositionManager(params.infiClPositionManager);
+        INFI_BIN_POSITION_MANAGER = IPositionManager(params.infiBinPositionManager);
     }
 }

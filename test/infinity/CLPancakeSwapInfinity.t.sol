@@ -28,14 +28,14 @@ import {LiquidityAmounts} from "infinity-periphery/src/pool-cl/libraries/Liquidi
 import {PathKey} from "infinity-periphery/src/libraries/PathKey.sol";
 import {CLPool} from "infinity-core/src/pool-cl/libraries/CLPool.sol";
 
-import {BasePancakeSwapV4} from "./BasePancakeSwapV4.sol";
+import {BasePancakeSwapInfinity} from "./BasePancakeSwapInfinity.sol";
 import {UniversalRouter} from "../../src/UniversalRouter.sol";
 import {IUniversalRouter} from "../../src/interfaces/IUniversalRouter.sol";
 import {Constants} from "../../src/libraries/Constants.sol";
 import {Commands} from "../../src/libraries/Commands.sol";
 import {RouterParameters} from "../../src/base/RouterImmutables.sol";
 
-contract CLPancakeSwapV4Test is BasePancakeSwapV4 {
+contract CLPancakeSwapInfinityTest is BasePancakeSwapInfinity {
     using CLPoolParametersHelper for bytes32;
     using Planner for Plan;
 
@@ -73,7 +73,7 @@ contract CLPancakeSwapV4Test is BasePancakeSwapV4 {
         token2 = MockERC20(Currency.unwrap(currency2));
 
         CLPositionDescriptorOffChain pd =
-            new CLPositionDescriptorOffChain("https://pancakeswap.finance/v4/pool-cl/positions/");
+            new CLPositionDescriptorOffChain("https://pancakeswap.finance/infinity/pool-cl/positions/");
         positionManager = new CLPositionManager(vault, poolManager, permit2, 100_000, pd, IWETH9(address(weth9)));
         _approvePermit2ForCurrency(address(this), currency0, address(positionManager), permit2);
         _approvePermit2ForCurrency(address(this), currency1, address(positionManager), permit2);
@@ -89,12 +89,12 @@ contract CLPancakeSwapV4Test is BasePancakeSwapV4 {
             v3InitCodeHash: bytes32(0),
             stableFactory: address(0),
             stableInfo: address(0),
-            v4Vault: address(vault),
-            v4ClPoolManager: address(poolManager),
-            v4BinPoolManager: address(0),
+            infiVault: address(vault),
+            infiClPoolManager: address(poolManager),
+            infiBinPoolManager: address(0),
             v3NFTPositionManager: address(0),
-            v4ClPositionManager: address(positionManager),
-            v4BinPositionManager: address(0)
+            infiClPositionManager: address(positionManager),
+            infiBinPositionManager: address(0)
         });
         router = new UniversalRouter(params);
         _approvePermit2ForCurrency(alice, currency0, address(router), permit2);
