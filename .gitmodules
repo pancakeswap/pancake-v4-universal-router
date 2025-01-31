@@ -7,3 +7,6 @@
 [submodule "lib/pancake-create3-factory"]
 	path = lib/pancake-create3-factory
 	url = https://github.com/pancakeswap/pancake-create3-factory
+[submodule "lib/infinity-periphery"]
+	path = lib/infinity-periphery
+	url = https://github.com/pancakeswap/infinity-periphery
