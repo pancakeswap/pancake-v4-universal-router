@@ -3,10 +3,10 @@ pragma solidity ^0.8.0;
 
 import {IPermit2} from "permit2/src/interfaces/IPermit2.sol";
 import {IV3NonfungiblePositionManager} from
-    "pancake-v4-periphery/src/interfaces/external/IV3NonfungiblePositionManager.sol";
-import {IPositionManager} from "pancake-v4-periphery/src/interfaces/IPositionManager.sol";
+    "infinity-periphery/src/interfaces/external/IV3NonfungiblePositionManager.sol";
+import {IPositionManager} from "infinity-periphery/src/interfaces/IPositionManager.sol";
 import {ERC20} from "solmate/src/tokens/ERC20.sol";
-import {IWETH9} from "pancake-v4-periphery/src/interfaces/external/IWETH9.sol";
+import {IWETH9} from "infinity-periphery/src/interfaces/external/IWETH9.sol";
 
 struct RouterParameters {
     // Payment parameters

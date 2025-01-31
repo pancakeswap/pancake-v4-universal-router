@@ -4,7 +4,7 @@
 pragma solidity ^0.8.0;
 
 import {Constants} from "./Constants.sol";
-import {CalldataDecoder} from "pancake-v4-periphery/src/libraries/CalldataDecoder.sol";
+import {CalldataDecoder} from "infinity-periphery/src/libraries/CalldataDecoder.sol";
 
 library BytesLib {
     using CalldataDecoder for bytes;

@@ -16,7 +16,7 @@ import {RouterParameters} from "../../../src/base/RouterImmutables.sol";
 contract DeployOpbnb is DeployUniversalRouter {
     /// @notice contract address will be based on deployment salt
     function getDeploymentSalt() public pure override returns (bytes32) {
-        return keccak256("PANCAKE-V4-UNIVERSAL-ROUTER/UniversalRouter/0.0001");
+        return keccak256("INFINITY-UNIVERSAL-ROUTER/UniversalRouter/0.0001");
     }
 
     function setUp() public override {

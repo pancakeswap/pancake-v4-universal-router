@@ -4,11 +4,11 @@ pragma solidity ^0.8.0;
 
 import {RouterImmutables} from "../base/RouterImmutables.sol";
 import {IV3NonfungiblePositionManager} from
-    "pancake-v4-periphery/src/interfaces/external/IV3NonfungiblePositionManager.sol";
-import {Actions} from "pancake-v4-periphery/src/libraries/Actions.sol";
-import {CalldataDecoder} from "pancake-v4-periphery/src/libraries/CalldataDecoder.sol";
-import {IPositionManager} from "pancake-v4-periphery/src/interfaces/IPositionManager.sol";
-import {IERC721Permit} from "pancake-v4-periphery/src/pool-cl/interfaces/IERC721Permit.sol";
+    "infinity-periphery/src/interfaces/external/IV3NonfungiblePositionManager.sol";
+import {Actions} from "infinity-periphery/src/libraries/Actions.sol";
+import {CalldataDecoder} from "infinity-periphery/src/libraries/CalldataDecoder.sol";
+import {IPositionManager} from "infinity-periphery/src/interfaces/IPositionManager.sol";
+import {IERC721Permit} from "infinity-periphery/src/pool-cl/interfaces/IERC721Permit.sol";
 
 /// @title V3 to V4 Migrator
 /// @notice A contract that migrates liquidity from PancakeSwap V3 to V4

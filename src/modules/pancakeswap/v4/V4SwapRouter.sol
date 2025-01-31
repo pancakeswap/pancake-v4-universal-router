@@ -3,11 +3,11 @@
 pragma solidity ^0.8.24;
 
 import {Permit2Payments} from "../../Permit2Payments.sol";
-import {V4Router} from "pancake-v4-periphery/src/V4Router.sol";
-import {IVault} from "pancake-v4-core/src/interfaces/IVault.sol";
-import {ICLPoolManager} from "pancake-v4-core/src/pool-cl/interfaces/ICLPoolManager.sol";
-import {IBinPoolManager} from "pancake-v4-core/src/pool-bin/interfaces/IBinPoolManager.sol";
-import {Currency} from "pancake-v4-core/src/types/Currency.sol";
+import {V4Router} from "infinity-periphery/src/V4Router.sol";
+import {IVault} from "infinity-core/src/interfaces/IVault.sol";
+import {ICLPoolManager} from "infinity-core/src/pool-cl/interfaces/ICLPoolManager.sol";
+import {IBinPoolManager} from "infinity-core/src/pool-bin/interfaces/IBinPoolManager.sol";
+import {Currency} from "infinity-core/src/types/Currency.sol";
 
 /// @title Router for PCS v4 Trades
 abstract contract V4SwapRouter is V4Router, Permit2Payments {

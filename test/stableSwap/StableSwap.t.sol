@@ -3,7 +3,7 @@ pragma solidity ^0.8.13;
 
 import {Test, console} from "forge-std/Test.sol";
 import {ERC20} from "solmate/src/tokens/ERC20.sol";
-import {ActionConstants} from "pancake-v4-periphery/src/libraries/ActionConstants.sol";
+import {ActionConstants} from "infinity-periphery/src/libraries/ActionConstants.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 import {IPermit2} from "permit2/src/interfaces/IPermit2.sol";
