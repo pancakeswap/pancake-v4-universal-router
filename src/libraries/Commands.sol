@@ -32,13 +32,13 @@ library Commands {
     // COMMAND_PLACEHOLDER = 0x0f;
 
     // Command Types where 0x10<=value<=0x20, executed in the third nested-if block
-    uint256 constant V4_SWAP = 0x10;
+    uint256 constant INFI_SWAP = 0x10;
     uint256 constant V3_POSITION_MANAGER_PERMIT = 0x11;
     uint256 constant V3_POSITION_MANAGER_CALL = 0x12;
-    uint256 constant V4_CL_INITIALIZE_POOL = 0x13;
-    uint256 constant V4_BIN_INITIALIZE_POOL = 0x14;
-    uint256 constant V4_CL_POSITION_CALL = 0x15;
-    uint256 constant V4_BIN_POSITION_CALL = 0x16;
+    uint256 constant INFI_CL_INITIALIZE_POOL = 0x13;
+    uint256 constant INFI_BIN_INITIALIZE_POOL = 0x14;
+    uint256 constant INFI_CL_POSITION_CALL = 0x15;
+    uint256 constant INFI_BIN_POSITION_CALL = 0x16;
     // COMMAND_PLACEHOLDER = 0x17 -> 0x20
 
     // Command Types where 0x21<=value<=0x3f

@@ -121,14 +121,14 @@ contract CLPancakeSwapInfinityTest is BasePancakeSwapInfinity {
             fee: uint24(3000),
             parameters: bytes32(0).setTickSpacing(10)
         });
-        bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.V4_CL_INITIALIZE_POOL)));
+        bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.INFI_CL_INITIALIZE_POOL)));
         bytes[] memory inputs = new bytes[](1);
         inputs[0] = abi.encode(poolKey1, SQRT_PRICE_1_1);
         router.execute(commands, inputs);
         _mint(poolKey1);
     }
 
-    function test_v4ClSwap_v4InitializeClPool() public {
+    function test_infiClSwap_infiInitializeClPool() public {
         MockERC20 _token = new MockERC20("token", "token", 18);
         PoolKey memory _poolKey = PoolKey({
             currency0: currency0,
@@ -144,11 +144,11 @@ contract CLPancakeSwapInfinityTest is BasePancakeSwapInfinity {
         assertEq(sqrtPriceX96, 0);
 
         // initialize
-        bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.V4_CL_INITIALIZE_POOL)));
+        bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.INFI_CL_INITIALIZE_POOL)));
         bytes[] memory inputs = new bytes[](1);
         inputs[0] = abi.encode(_poolKey, SQRT_PRICE_1_1);
         router.execute(commands, inputs);
-        vm.snapshotGasLastCall("test_v4ClSwap_v4InitializeClPool");
+        vm.snapshotGasLastCall("test_infiClSwap_infiInitializeClPool");
 
         // verify
         (sqrtPriceX96,,,) = poolManager.getSlot0(_poolKey.toId());
@@ -163,19 +163,19 @@ contract CLPancakeSwapInfinityTest is BasePancakeSwapInfinity {
         router.execute(commands, inputs);
     }
 
-    function test_v4ClSwap_ExactInSingle() public {
+    function test_infiClSwap_ExactInSingle() public {
         uint128 amountIn = 0.01 ether;
         MockERC20(Currency.unwrap(currency0)).mint(alice, amountIn);
         vm.startPrank(alice);
 
-        // prepare v4 swap input
+        // prepare infinity swap input
         ICLRouterBase.CLSwapExactInputSingleParams memory params =
             ICLRouterBase.CLSwapExactInputSingleParams(poolKey0, true, amountIn, 0, "");
         plan = Planner.init().add(Actions.CL_SWAP_EXACT_IN_SINGLE, abi.encode(params));
         bytes memory data = plan.finalizeSwap(poolKey0.currency0, poolKey0.currency1, ActionConstants.MSG_SENDER);
 
-        // call v4_swap
-        bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.V4_SWAP)));
+        // call infi_swap
+        bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.INFI_SWAP)));
         bytes[] memory inputs = new bytes[](1);
         inputs[0] = data;
 
@@ -183,17 +183,17 @@ contract CLPancakeSwapInfinityTest is BasePancakeSwapInfinity {
         assertEq(token0.balanceOf(alice), 0.01 ether);
         assertEq(token1.balanceOf(alice), 0 ether);
         router.execute(commands, inputs);
-        vm.snapshotGasLastCall("test_v4ClSwap_ExactInSingle");
+        vm.snapshotGasLastCall("test_infiClSwap_ExactInSingle");
         assertEq(token0.balanceOf(alice), 0 ether);
         assertEq(token1.balanceOf(alice), 9969940541342903); // around 0.01 eth * 0.997 - slippage
     }
 
-    function test_v4ClSwap_ExactIn_SingleHop() public {
+    function test_infiClSwap_ExactIn_SingleHop() public {
         uint128 amountIn = 0.01 ether;
         MockERC20(Currency.unwrap(currency0)).mint(alice, amountIn);
         vm.startPrank(alice);
 
-        // prepare v4 swap input
+        // prepare infinity swap input
         PathKey[] memory path = new PathKey[](1);
         path[0] = PathKey({
             intermediateCurrency: currency1,
@@ -208,8 +208,8 @@ contract CLPancakeSwapInfinityTest is BasePancakeSwapInfinity {
         plan = Planner.init().add(Actions.CL_SWAP_EXACT_IN, abi.encode(params));
         bytes memory data = plan.finalizeSwap(currency0, currency1, ActionConstants.MSG_SENDER);
 
-        // call v4_swap
-        bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.V4_SWAP)));
+        // call infi_swap
+        bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.INFI_SWAP)));
         bytes[] memory inputs = new bytes[](1);
         inputs[0] = data;
 
@@ -217,17 +217,17 @@ contract CLPancakeSwapInfinityTest is BasePancakeSwapInfinity {
         assertEq(token0.balanceOf(alice), 0.01 ether);
         assertEq(token1.balanceOf(alice), 0 ether);
         router.execute(commands, inputs);
-        vm.snapshotGasLastCall("test_v4ClSwap_ExactIn_SingleHop");
+        vm.snapshotGasLastCall("test_infiClSwap_ExactIn_SingleHop");
         assertEq(token0.balanceOf(alice), 0 ether);
         assertEq(token1.balanceOf(alice), 9969940541342903); // around 0.01 eth * 0.997 - slippage
     }
 
-    function test_v4ClSwap_ExactIn_MultiHop() public {
+    function test_infiClSwap_ExactIn_MultiHop() public {
         uint128 amountIn = 0.01 ether;
         MockERC20(Currency.unwrap(currency0)).mint(alice, amountIn);
         vm.startPrank(alice);
 
-        // prepare v4 swap input
+        // prepare infinity swap input
         PathKey[] memory path = new PathKey[](2);
         path[0] = PathKey({
             intermediateCurrency: currency1,
@@ -250,8 +250,8 @@ contract CLPancakeSwapInfinityTest is BasePancakeSwapInfinity {
         plan = Planner.init().add(Actions.CL_SWAP_EXACT_IN, abi.encode(params));
         bytes memory data = plan.finalizeSwap(currency0, currency2, ActionConstants.MSG_SENDER);
 
-        // call v4_swap
-        bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.V4_SWAP)));
+        // call infi_swap
+        bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.INFI_SWAP)));
         bytes[] memory inputs = new bytes[](1);
         inputs[0] = data;
 
@@ -259,24 +259,24 @@ contract CLPancakeSwapInfinityTest is BasePancakeSwapInfinity {
         assertEq(token0.balanceOf(alice), 0.01 ether);
         assertEq(token2.balanceOf(alice), 0 ether);
         router.execute(commands, inputs);
-        vm.snapshotGasLastCall("test_v4ClSwap_ExactIn_MultiHop");
+        vm.snapshotGasLastCall("test_infiClSwap_ExactIn_MultiHop");
         assertEq(token0.balanceOf(alice), 0 ether);
         assertEq(token2.balanceOf(alice), 9939971617982475); // around 0.01 eth - fee/slippage
     }
 
-    function test_v4ClSwap_ExactOutSingle() public {
+    function test_infiClSwap_ExactOutSingle() public {
         uint128 amountOut = 0.01 ether;
         MockERC20(Currency.unwrap(currency0)).mint(alice, amountOut * 2); // *2 to handle slippage
         vm.startPrank(alice);
 
-        // prepare v4 swap input
+        // prepare infinity swap input
         ICLRouterBase.CLSwapExactOutputSingleParams memory params =
             ICLRouterBase.CLSwapExactOutputSingleParams(poolKey0, true, amountOut, amountOut * 2, "");
         plan = Planner.init().add(Actions.CL_SWAP_EXACT_OUT_SINGLE, abi.encode(params));
         bytes memory data = plan.finalizeSwap(poolKey0.currency0, poolKey0.currency1, ActionConstants.MSG_SENDER);
 
-        // call v4_swap
-        bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.V4_SWAP)));
+        // call infi_swap
+        bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.INFI_SWAP)));
         bytes[] memory inputs = new bytes[](1);
         inputs[0] = data;
 
@@ -284,17 +284,17 @@ contract CLPancakeSwapInfinityTest is BasePancakeSwapInfinity {
         assertEq(token0.balanceOf(alice), 0.02 ether);
         assertEq(token1.balanceOf(alice), 0 ether);
         router.execute(commands, inputs);
-        vm.snapshotGasLastCall("test_v4ClSwap_ExactOutSingle");
+        vm.snapshotGasLastCall("test_infiClSwap_ExactOutSingle");
         assertEq(token0.balanceOf(alice), 9969849731458956); // around 0.02 eth - 0.01 eth - slippage
         assertEq(token1.balanceOf(alice), 0.01 ether);
     }
 
-    function test_v4ClSwap_ExactOut_SingleHop() public {
+    function test_infiClSwap_ExactOut_SingleHop() public {
         uint128 amountOut = 0.01 ether;
         MockERC20(Currency.unwrap(currency0)).mint(alice, amountOut * 2); // *2 to handle slippage
         vm.startPrank(alice);
 
-        // prepare v4 swap input
+        // prepare infinity swap input
         PathKey[] memory path = new PathKey[](1);
         path[0] = PathKey({
             intermediateCurrency: currency0,
@@ -309,8 +309,8 @@ contract CLPancakeSwapInfinityTest is BasePancakeSwapInfinity {
         plan = Planner.init().add(Actions.CL_SWAP_EXACT_OUT, abi.encode(params));
         bytes memory data = plan.finalizeSwap(currency0, currency1, ActionConstants.MSG_SENDER);
 
-        // call v4_swap
-        bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.V4_SWAP)));
+        // call infi_swap
+        bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.INFI_SWAP)));
         bytes[] memory inputs = new bytes[](1);
         inputs[0] = data;
 
@@ -318,17 +318,17 @@ contract CLPancakeSwapInfinityTest is BasePancakeSwapInfinity {
         assertEq(token0.balanceOf(alice), 0.02 ether);
         assertEq(token1.balanceOf(alice), 0 ether);
         router.execute(commands, inputs);
-        vm.snapshotGasLastCall("test_v4ClSwap_ExactOut_SingleHop");
+        vm.snapshotGasLastCall("test_infiClSwap_ExactOut_SingleHop");
         assertEq(token0.balanceOf(alice), 9969849731458956); // around 0.02 eth - 0.01 eth - slippage
         assertEq(token1.balanceOf(alice), 0.01 ether);
     }
 
-    function test_v4ClSwap_ExactOut_MultiHop() public {
+    function test_infiClSwap_ExactOut_MultiHop() public {
         uint128 amountOut = 0.01 ether;
         MockERC20(Currency.unwrap(currency0)).mint(alice, amountOut * 2); // *2 to handle slippage
         vm.startPrank(alice);
 
-        // prepare v4 swap input
+        // prepare infinity swap input
         PathKey[] memory path = new PathKey[](2);
         path[0] = PathKey({
             intermediateCurrency: currency0,
@@ -351,8 +351,8 @@ contract CLPancakeSwapInfinityTest is BasePancakeSwapInfinity {
         plan = Planner.init().add(Actions.CL_SWAP_EXACT_OUT, abi.encode(params));
         bytes memory data = plan.finalizeSwap(currency0, currency2, ActionConstants.MSG_SENDER);
 
-        // call v4_swap
-        bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.V4_SWAP)));
+        // call infi_swap
+        bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.INFI_SWAP)));
         bytes[] memory inputs = new bytes[](1);
         inputs[0] = data;
 
@@ -360,7 +360,7 @@ contract CLPancakeSwapInfinityTest is BasePancakeSwapInfinity {
         assertEq(token0.balanceOf(alice), 0.02 ether);
         assertEq(token2.balanceOf(alice), 0 ether);
         router.execute(commands, inputs);
-        vm.snapshotGasLastCall("test_v4ClSwap_ExactOut_MultiHop");
+        vm.snapshotGasLastCall("test_infiClSwap_ExactOut_MultiHop");
         assertEq(token0.balanceOf(alice), 9939608377607349);
         assertEq(token2.balanceOf(alice), 0.01 ether);
     }

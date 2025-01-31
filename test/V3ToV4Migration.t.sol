@@ -62,7 +62,7 @@ contract V3ToV4MigrationTest is BasePancakeSwapInfinity, OldVersionHelper, BinLi
     uint256 alicePK;
     uint256 v3TokenId;
 
-    // v4 related
+    // infinity related
     IVault vault;
     IBinPoolManager binPoolManager;
     BinPositionManager binPositionManager;
@@ -112,7 +112,7 @@ contract V3ToV4MigrationTest is BasePancakeSwapInfinity, OldVersionHelper, BinLi
         vm.stopPrank();
 
         ///////////////////////////////////
-        //////////// v4 setup /////////////
+        ////////// infinity setup /////////
         ///////////////////////////////////
         vault = IVault(new Vault());
         binPoolManager = new BinPoolManager(vault);
@@ -283,11 +283,11 @@ contract V3ToV4MigrationTest is BasePancakeSwapInfinity, OldVersionHelper, BinLi
         assertEq(token1.balanceOf(address(router)), 9999999999999999999);
     }
 
-    function test_v4CLPositionmanger_InvalidAction() public {
+    function test_infiCLPositionmanger_InvalidAction() public {
         Plan memory planner = Planner.init();
 
         // prep universal router actions
-        bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.V4_CL_POSITION_CALL)));
+        bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.INFI_CL_POSITION_CALL)));
         bytes[] memory inputs = new bytes[](1);
 
         bytes4 invalidSelector = IPositionManager.modifyLiquiditiesWithoutLock.selector;
@@ -296,9 +296,9 @@ contract V3ToV4MigrationTest is BasePancakeSwapInfinity, OldVersionHelper, BinLi
         router.execute(commands, inputs);
     }
 
-    function test_v4CLPositionmanger_BlacklistedAction() public {
+    function test_infiCLPositionmanger_BlacklistedAction() public {
         Plan memory planner = Planner.init();
-        bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.V4_CL_POSITION_CALL)));
+        bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.INFI_CL_POSITION_CALL)));
         bytes[] memory inputs = new bytes[](1);
 
         uint256[] memory invalidActions = new uint256[](3);
@@ -318,11 +318,11 @@ contract V3ToV4MigrationTest is BasePancakeSwapInfinity, OldVersionHelper, BinLi
         }
     }
 
-    function test_v4BinPositionmanger_InvalidAction() public {
+    function test_infiBinPositionmanger_InvalidAction() public {
         Plan memory planner = Planner.init();
 
         // prep universal router actions
-        bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.V4_BIN_POSITION_CALL)));
+        bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.INFI_BIN_POSITION_CALL)));
         bytes[] memory inputs = new bytes[](1);
 
         bytes4 invalidSelector = IPositionManager.modifyLiquiditiesWithoutLock.selector;
@@ -331,9 +331,9 @@ contract V3ToV4MigrationTest is BasePancakeSwapInfinity, OldVersionHelper, BinLi
         router.execute(commands, inputs);
     }
 
-    function test_v4BinPositionmanger_BlacklistedAction() public {
+    function test_infiBinPositionmanger_BlacklistedAction() public {
         Plan memory planner = Planner.init();
-        bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.V4_BIN_POSITION_CALL)));
+        bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.INFI_BIN_POSITION_CALL)));
         bytes[] memory inputs = new bytes[](1);
 
         uint256[] memory invalidActions = new uint256[](1);
@@ -352,8 +352,8 @@ contract V3ToV4MigrationTest is BasePancakeSwapInfinity, OldVersionHelper, BinLi
     }
 
     /// @dev Assume token0/token1 is aready in universal router from earlier steps on v3
-    ///      then add liquidity to v4 cl and sweep remaining token
-    function test_v4CLPositionmanager_Mint() public {
+    ///      then add liquidity to infinity cl and sweep remaining token
+    function test_infiCLPositionmanager_Mint() public {
         // assume token0/token1 is in universal router
         token0.mint(address(router), 10 ether);
         token1.mint(address(router), 10 ether);
@@ -368,7 +368,7 @@ contract V3ToV4MigrationTest is BasePancakeSwapInfinity, OldVersionHelper, BinLi
 
         // prep universal router actions
         bytes memory commands = abi.encodePacked(
-            bytes1(uint8(Commands.SWEEP)), bytes1(uint8(Commands.SWEEP)), bytes1(uint8(Commands.V4_CL_POSITION_CALL))
+            bytes1(uint8(Commands.SWEEP)), bytes1(uint8(Commands.SWEEP)), bytes1(uint8(Commands.INFI_CL_POSITION_CALL))
         );
         bytes[] memory inputs = new bytes[](3);
         inputs[0] = abi.encode(token0, address(clPositionManager), 0); // send token to clPositionmanager
@@ -378,7 +378,7 @@ contract V3ToV4MigrationTest is BasePancakeSwapInfinity, OldVersionHelper, BinLi
 
         vm.prank(alice);
         router.execute(commands, inputs);
-        vm.snapshotGasLastCall("test_v4CLPositionmanager_Mint");
+        vm.snapshotGasLastCall("test_infiCLPositionmanager_Mint");
 
         // verify balance sent back to alice
         assertEq(token0.balanceOf(address(alice)), 9994018262239490337);
@@ -387,8 +387,8 @@ contract V3ToV4MigrationTest is BasePancakeSwapInfinity, OldVersionHelper, BinLi
     }
 
     /// @dev Assume token0/token1 is aready in universal router from earlier steps on v3
-    ///      then add liquidity to v4 cl and sweep remaining token
-    function test_v4BinPositionmanager_BinAddLiquidity() public {
+    ///      then add liquidity to infinity cl and sweep remaining token
+    function test_infiBinPositionmanager_BinAddLiquidity() public {
         // assume token0/token1 is in universal router
         token0.mint(address(router), 10 ether);
         token1.mint(address(router), 10 ether);
@@ -407,7 +407,7 @@ contract V3ToV4MigrationTest is BasePancakeSwapInfinity, OldVersionHelper, BinLi
 
         // prep universal router actions
         bytes memory commands = abi.encodePacked(
-            bytes1(uint8(Commands.SWEEP)), bytes1(uint8(Commands.SWEEP)), bytes1(uint8(Commands.V4_BIN_POSITION_CALL))
+            bytes1(uint8(Commands.SWEEP)), bytes1(uint8(Commands.SWEEP)), bytes1(uint8(Commands.INFI_BIN_POSITION_CALL))
         );
         bytes[] memory inputs = new bytes[](3);
         inputs[0] = abi.encode(token0, address(binPositionManager), 0); // send token to binPositionManager
@@ -417,7 +417,7 @@ contract V3ToV4MigrationTest is BasePancakeSwapInfinity, OldVersionHelper, BinLi
 
         vm.prank(alice);
         router.execute(commands, inputs);
-        vm.snapshotGasLastCall("test_v4BinPositionmanager_BinAddLiquidity");
+        vm.snapshotGasLastCall("test_infiBinPositionmanager_BinAddLiquidity");
 
         // verify balance sent back to alice
         assertEq(token0.balanceOf(address(alice)), 5 ether);

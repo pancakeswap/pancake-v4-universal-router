@@ -57,7 +57,7 @@ contract V3ToV4MigrationNativeTest is BasePancakeSwapInfinity, OldVersionHelper,
     address alice;
     uint256 alicePK;
 
-    // v4 related
+    // infinity related
     IVault vault;
     IBinPoolManager binPoolManager;
     BinPositionManager binPositionManager;
@@ -81,7 +81,7 @@ contract V3ToV4MigrationNativeTest is BasePancakeSwapInfinity, OldVersionHelper,
         permit2 = IAllowanceTransfer(deployPermit2());
 
         ///////////////////////////////////
-        //////////// v4 setup /////////////
+        ///////// infinity setup //////////
         ///////////////////////////////////
         vault = IVault(new Vault());
         binPoolManager = new BinPoolManager(vault);
@@ -142,8 +142,8 @@ contract V3ToV4MigrationNativeTest is BasePancakeSwapInfinity, OldVersionHelper,
     }
 
     /// @dev Assume weth/token1 is aready in universal router from v3 removal liquidity
-    ///         then add liquidity to v4 cl and sweep remaining token
-    function test_v4CLPositionmanager_Mint_Native() public {
+    ///         then add liquidity to infinity cl and sweep remaining token
+    function test_infiCLPositionmanager_Mint_Native() public {
         // assume weth/token1 is in universal router
         vm.deal(address(this), 10 ether);
         weth.deposit{value: 10 ether}();
@@ -162,7 +162,7 @@ contract V3ToV4MigrationNativeTest is BasePancakeSwapInfinity, OldVersionHelper,
         bytes memory commands = abi.encodePacked(
             bytes1(uint8(Commands.UNWRAP_WETH)),
             bytes1(uint8(Commands.SWEEP)),
-            bytes1(uint8(Commands.V4_CL_POSITION_CALL))
+            bytes1(uint8(Commands.INFI_CL_POSITION_CALL))
         );
         bytes[] memory inputs = new bytes[](3);
         inputs[0] = abi.encode(address(router), 10 ether); // get native eth to router
@@ -172,7 +172,7 @@ contract V3ToV4MigrationNativeTest is BasePancakeSwapInfinity, OldVersionHelper,
 
         vm.prank(alice);
         router.execute(commands, inputs);
-        vm.snapshotGasLastCall("test_v4CLPositionmanager_Mint_Native");
+        vm.snapshotGasLastCall("test_infiCLPositionmanager_Mint_Native");
 
         // verify remaining balance sent back to alice
         assertEq(alice.balance, 9994018262239490337);
@@ -181,8 +181,8 @@ contract V3ToV4MigrationNativeTest is BasePancakeSwapInfinity, OldVersionHelper,
     }
 
     /// @dev Assume weth/token1 is aready in universal router from v3 removal liquidity
-    ///      then add liquidity to v4 cl and sweep remaining token
-    function test_v4BinPositionmanager_BinAddLiquidity_Native() public {
+    ///      then add liquidity to infinity cl and sweep remaining token
+    function test_infiBinPositionmanager_BinAddLiquidity_Native() public {
         // assume weth/token1 is in universal router
         vm.deal(address(this), 10 ether);
         weth.deposit{value: 10 ether}();
@@ -205,7 +205,7 @@ contract V3ToV4MigrationNativeTest is BasePancakeSwapInfinity, OldVersionHelper,
         bytes memory commands = abi.encodePacked(
             bytes1(uint8(Commands.UNWRAP_WETH)),
             bytes1(uint8(Commands.SWEEP)),
-            bytes1(uint8(Commands.V4_BIN_POSITION_CALL))
+            bytes1(uint8(Commands.INFI_BIN_POSITION_CALL))
         );
         bytes[] memory inputs = new bytes[](3);
         inputs[0] = abi.encode(address(router), 10 ether); // get native eth to universal router
@@ -215,7 +215,7 @@ contract V3ToV4MigrationNativeTest is BasePancakeSwapInfinity, OldVersionHelper,
 
         vm.prank(alice);
         router.execute(commands, inputs);
-        vm.snapshotGasLastCall("test_v4BinPositionmanager_BinAddLiquidity_Native");
+        vm.snapshotGasLastCall("test_infiBinPositionmanager_BinAddLiquidity_Native");
 
         // verify remaining balance sent back to alice
         assertEq(alice.balance, 5 ether);

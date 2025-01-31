@@ -64,7 +64,7 @@ abstract contract Dispatcher is
         // 0x00 <= command < 0x21
         if (command < Commands.EXECUTE_SUB_PLAN) {
             // 0x00 <= command < 0x10
-            if (command < Commands.V4_SWAP) {
+            if (command < Commands.INFI_SWAP) {
                 // 0x00 <= command < 0x08
                 if (command < Commands.V2_SWAP_EXACT_IN) {
                     if (command == Commands.V3_SWAP_EXACT_IN) {
@@ -271,7 +271,7 @@ abstract contract Dispatcher is
                 }
             } else {
                 // 0x10 <= command < 0x21
-                if (command == Commands.V4_SWAP) {
+                if (command == Commands.INFI_SWAP) {
                     // pass the calldata provided to InfinitySwapRouter._executeActions (defined in BaseActionsRouter)
                     _executeActions(inputs);
                     return (success, output);
@@ -285,7 +285,7 @@ abstract contract Dispatcher is
                     /// @dev ensure there's follow-up action if v3 position's removed token are sent to router contract
                     (success, output) = address(V3_POSITION_MANAGER).call(inputs);
                     return (success, output);
-                } else if (command == Commands.V4_CL_INITIALIZE_POOL) {
+                } else if (command == Commands.INFI_CL_INITIALIZE_POOL) {
                     // equivalent: abi.decode(inputs, (PoolKey, uint160)) where PoolKey is
                     // (Currency currency0, Currency currency1, IHooks hooks, IPoolManager poolManager, uint24 fee, bytes32 parameters)
                     PoolKey calldata poolKey;
@@ -296,7 +296,7 @@ abstract contract Dispatcher is
                     }
                     (success, output) =
                         address(clPoolManager).call(abi.encodeCall(ICLPoolManager.initialize, (poolKey, sqrtPriceX96)));
-                } else if (command == Commands.V4_BIN_INITIALIZE_POOL) {
+                } else if (command == Commands.INFI_BIN_INITIALIZE_POOL) {
                     // equivalent: abi.decode(inputs, (PoolKey, uint24)) where PoolKey is
                     // (Currency currency0, Currency currency1, IHooks hooks, IPoolManager poolManager, uint24 fee, bytes32 parameters)
                     PoolKey calldata poolKey;
@@ -307,11 +307,11 @@ abstract contract Dispatcher is
                     }
                     (success, output) =
                         address(binPoolManager).call(abi.encodeCall(IBinPoolManager.initialize, (poolKey, activeId)));
-                } else if (command == Commands.V4_CL_POSITION_CALL) {
+                } else if (command == Commands.INFI_CL_POSITION_CALL) {
                     _checkInfiClPositionManagerCall(inputs);
                     (success, output) = address(INFI_CL_POSITION_MANAGER).call{value: address(this).balance}(inputs);
                     return (success, output);
-                } else if (command == Commands.V4_BIN_POSITION_CALL) {
+                } else if (command == Commands.INFI_BIN_POSITION_CALL) {
                     _checkInfiBinPositionManagerCall(inputs);
                     (success, output) = address(INFI_BIN_POSITION_MANAGER).call{value: address(this).balance}(inputs);
                     return (success, output);

@@ -64,7 +64,7 @@ contract UniversalRouterCrossVersionTest is BasePancakeSwapInfinity, OldVersionH
     // v3 related
     IV3NonfungiblePositionManager v3Nfpm;
 
-    // v4 related
+    // infinity related
     IVault vault;
     IBinPoolManager binPoolManager;
     BinPositionManager binPositionManager;
@@ -105,7 +105,7 @@ contract UniversalRouterCrossVersionTest is BasePancakeSwapInfinity, OldVersionH
         );
 
         ///////////////////////////////////
-        //////////// v4 setup /////////////
+        //////////// infinity setup /////////////
         ///////////////////////////////////
         vault = IVault(new Vault());
         binPoolManager = new BinPoolManager(vault);
@@ -150,15 +150,15 @@ contract UniversalRouterCrossVersionTest is BasePancakeSwapInfinity, OldVersionH
         // add liquidity to v3 usdt-weth pool
         _mintV3Liquidity(address(usdt), address(weth), liquidityProvider);
 
-        // add liquidity to v4 usdc-eth cl-pool
+        // add liquidity to infinity usdc-eth cl-pool
         clPoolKeyWithETH = _mintV4CLLiquidity(address(usdc), address(0), liquidityProvider);
-        // add liquidity to v4 usdc-weth cl-pool
+        // add liquidity to infinity usdc-weth cl-pool
         clPoolKeyWithWrappedETH = _mintV4CLLiquidity(address(usdc), address(weth), liquidityProvider);
     }
 
     /// @dev case0:
     ///     hop1. swap with a v3 (weth-usdt) pool
-    ///     hop2. swap with a v4 native (eth-usdc) pool
+    ///     hop2. swap with a infinity native (eth-usdc) pool
     function test_corssVersionSwapCase0() public {
         // 0. user starts with 1 ether USDT
         address trader = makeAddr("trader");
@@ -171,7 +171,7 @@ contract UniversalRouterCrossVersionTest is BasePancakeSwapInfinity, OldVersionH
         bytes memory commands = abi.encodePacked(
             bytes1(uint8(Commands.V3_SWAP_EXACT_IN)), // USDT-> WETH
             bytes1(uint8(Commands.UNWRAP_WETH)), // WETH -> ETH
-            bytes1(uint8(Commands.V4_SWAP)) // ETH -> USDC
+            bytes1(uint8(Commands.INFI_SWAP)) // ETH -> USDC
         );
 
         // 2. build up corresponding inputs
@@ -191,7 +191,7 @@ contract UniversalRouterCrossVersionTest is BasePancakeSwapInfinity, OldVersionH
         // uint256 amountMin = 0 (by default all the WETH will be unwrapped);
         inputs[1] = abi.encode(ActionConstants.ADDRESS_THIS, 0);
 
-        // 2.3. prepare v4 exact in params (i.e. ETH -> USDC)
+        // 2.3. prepare infinity exact in params (i.e. ETH -> USDC)
         Plan memory planner = Planner.init();
 
         // 2.3.1. send ETH to vault ahead of time so that we can use it to pay for the following swap
@@ -200,7 +200,7 @@ contract UniversalRouterCrossVersionTest is BasePancakeSwapInfinity, OldVersionH
         // bool payerIsUser = false i.e. use the ETH we just received from unwrapping WETH
         planner.add(Actions.SETTLE, abi.encode(CurrencyLibrary.NATIVE, ActionConstants.CONTRACT_BALANCE, false));
 
-        // 2.3.2. v4 swap params
+        // 2.3.2. infinity swap params
         ICLRouterBase.CLSwapExactInputSingleParams memory params = ICLRouterBase.CLSwapExactInputSingleParams({
             poolKey: clPoolKeyWithETH,
             zeroForOne: true, // token0 is ETH
@@ -234,7 +234,7 @@ contract UniversalRouterCrossVersionTest is BasePancakeSwapInfinity, OldVersionH
 
     /// @dev case1:
     ///     hop1. swap with a v3 (weth-usdt) pool
-    ///     hop2. swap with a v4 non-native (weth-usdc) pool
+    ///     hop2. swap with a infinity non-native (weth-usdc) pool
     function test_corssVersionSwapCase1() public {
         // 0. user starts with 1 ether USDT
         address trader = makeAddr("trader");
@@ -246,7 +246,7 @@ contract UniversalRouterCrossVersionTest is BasePancakeSwapInfinity, OldVersionH
         // 1. build up univeral router commands list
         bytes memory commands = abi.encodePacked(
             bytes1(uint8(Commands.V3_SWAP_EXACT_IN)), // USDT-> WETH
-            bytes1(uint8(Commands.V4_SWAP)) // WETH -> USDC
+            bytes1(uint8(Commands.INFI_SWAP)) // WETH -> USDC
         );
 
         // 2. build up corresponding inputs
@@ -260,7 +260,7 @@ contract UniversalRouterCrossVersionTest is BasePancakeSwapInfinity, OldVersionH
         // bool payerIsUser = true since user is paying USDT
         inputs[0] = abi.encode(ActionConstants.ADDRESS_THIS, 1 ether, 0, path, true);
 
-        // 2.2. prepare v4 exact in params (i.e. WETH -> USDC)
+        // 2.2. prepare infinity exact in params (i.e. WETH -> USDC)
         Plan memory planner = Planner.init();
 
         // 2.2.1. send ETH to vault ahead of time so that we can use it to pay for the following swap
@@ -269,7 +269,7 @@ contract UniversalRouterCrossVersionTest is BasePancakeSwapInfinity, OldVersionH
         // bool payerIsUser = false i.e. use the WETH we just received from v3Swap
         planner.add(Actions.SETTLE, abi.encode(Currency.wrap(address(weth)), ActionConstants.CONTRACT_BALANCE, false));
 
-        // 2.2.2. v4 swap params
+        // 2.2.2. infinity swap params
         bool zeroForOne = Currency.unwrap(clPoolKeyWithWrappedETH.currency0) == address(weth);
         ICLRouterBase.CLSwapExactInputSingleParams memory params = ICLRouterBase.CLSwapExactInputSingleParams({
             poolKey: clPoolKeyWithWrappedETH,
@@ -303,7 +303,7 @@ contract UniversalRouterCrossVersionTest is BasePancakeSwapInfinity, OldVersionH
     }
 
     /// @dev case2:
-    ///     hop1. swap with a v4 native (eth-usdc) pool
+    ///     hop1. swap with a infinity native (eth-usdc) pool
     ///     hop2. swap with a v3 (weth-usdt) pool
     function test_corssVersionSwapCase2() public {
         // 0. user starts with 1 ether usdc
@@ -315,7 +315,7 @@ contract UniversalRouterCrossVersionTest is BasePancakeSwapInfinity, OldVersionH
 
         // 1. build up univeral router commands list
         bytes memory commands = abi.encodePacked(
-            bytes1(uint8(Commands.V4_SWAP)), // USDC -> ETH
+            bytes1(uint8(Commands.INFI_SWAP)), // USDC -> ETH
             bytes1(uint8(Commands.WRAP_ETH)), // ETH -> WETH
             bytes1(uint8(Commands.V3_SWAP_EXACT_IN)), // WETH -> USDT
             bytes1(uint8(Commands.SWEEP)) // SWEEP WETH
@@ -324,10 +324,10 @@ contract UniversalRouterCrossVersionTest is BasePancakeSwapInfinity, OldVersionH
         // 2. build up corresponding inputs
         bytes[] memory inputs = new bytes[](4);
 
-        // 2.1. prepare v4 exact in params (i.e. ETH -> USDC)
+        // 2.1. prepare infinity exact in params (i.e. ETH -> USDC)
         Plan memory planner = Planner.init();
 
-        // 2.1.1. v4 swap params
+        // 2.1.1. infinity swap params
         ICLRouterBase.CLSwapExactInputSingleParams memory params = ICLRouterBase.CLSwapExactInputSingleParams({
             poolKey: clPoolKeyWithETH,
             zeroForOne: false, // token0 is ETH
@@ -351,7 +351,7 @@ contract UniversalRouterCrossVersionTest is BasePancakeSwapInfinity, OldVersionH
 
         // 2.2. wrap ETH to WETH:
         // address recipient = ADDRESS_THIS to make sure WETH is send back to universal router;
-        // uint256 amount = ActionConstants.CONTRACT_BALANCE to make sure all the ETH from v4 is wrapped
+        // uint256 amount = ActionConstants.CONTRACT_BALANCE to make sure all the ETH from infinity is wrapped
         inputs[1] = abi.encode(ActionConstants.ADDRESS_THIS, ActionConstants.CONTRACT_BALANCE);
 
         // 2.3. prepare v3 exact in params (i.e. WETH -> USDT):
@@ -384,7 +384,7 @@ contract UniversalRouterCrossVersionTest is BasePancakeSwapInfinity, OldVersionH
     }
 
     /// @dev case3:
-    ///     hop1. swap with a v4 non-native (weth-usdc) pool
+    ///     hop1. swap with a infinity non-native (weth-usdc) pool
     ///     hop2. swap with a v3 (weth-usdt) pool
     function test_corssVersionSwapCase3() public {
         // 0. user starts with 1 ether usdc
@@ -396,7 +396,7 @@ contract UniversalRouterCrossVersionTest is BasePancakeSwapInfinity, OldVersionH
 
         // 1. build up univeral router commands list
         bytes memory commands = abi.encodePacked(
-            bytes1(uint8(Commands.V4_SWAP)), // USDC -> WETH
+            bytes1(uint8(Commands.INFI_SWAP)), // USDC -> WETH
             bytes1(uint8(Commands.V3_SWAP_EXACT_IN)), // WETH -> USDT
             bytes1(uint8(Commands.SWEEP)) // SWEEP WETH
         );
@@ -404,10 +404,10 @@ contract UniversalRouterCrossVersionTest is BasePancakeSwapInfinity, OldVersionH
         // 2. build up corresponding inputs
         bytes[] memory inputs = new bytes[](3);
 
-        // 2.1. prepare v4 exact in params (i.e. WETH -> USDC)
+        // 2.1. prepare infinity exact in params (i.e. WETH -> USDC)
         Plan memory planner = Planner.init();
 
-        // 2.1.1. v4 swap params
+        // 2.1.1. infinity swap params
         bool zeroForOne = Currency.unwrap(clPoolKeyWithWrappedETH.currency0) != address(weth);
         ICLRouterBase.CLSwapExactInputSingleParams memory params = ICLRouterBase.CLSwapExactInputSingleParams({
             poolKey: clPoolKeyWithWrappedETH,
@@ -522,7 +522,7 @@ contract UniversalRouterCrossVersionTest is BasePancakeSwapInfinity, OldVersionH
         planner.add(Actions.SWEEP, abi.encode(key.currency1, recipient));
 
         // prep universal router actions
-        bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.V4_CL_POSITION_CALL)));
+        bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.INFI_CL_POSITION_CALL)));
         bytes[] memory inputs = new bytes[](1);
         inputs[0] =
             abi.encodePacked(IPositionManager.modifyLiquidities.selector, abi.encode(planner.encode(), block.timestamp));
