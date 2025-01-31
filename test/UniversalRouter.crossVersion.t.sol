@@ -151,9 +151,9 @@ contract UniversalRouterCrossVersionTest is BasePancakeSwapInfinity, OldVersionH
         _mintV3Liquidity(address(usdt), address(weth), liquidityProvider);
 
         // add liquidity to infinity usdc-eth cl-pool
-        clPoolKeyWithETH = _mintV4CLLiquidity(address(usdc), address(0), liquidityProvider);
+        clPoolKeyWithETH = _mintInfiCLLiquidity(address(usdc), address(0), liquidityProvider);
         // add liquidity to infinity usdc-weth cl-pool
-        clPoolKeyWithWrappedETH = _mintV4CLLiquidity(address(usdc), address(weth), liquidityProvider);
+        clPoolKeyWithWrappedETH = _mintInfiCLLiquidity(address(usdc), address(weth), liquidityProvider);
     }
 
     /// @dev case0:
@@ -490,7 +490,7 @@ contract UniversalRouterCrossVersionTest is BasePancakeSwapInfinity, OldVersionH
         v3Nfpm.mint(mintParams);
     }
 
-    function _mintV4CLLiquidity(address _token0, address _token1, address recipient)
+    function _mintInfiCLLiquidity(address _token0, address _token1, address recipient)
         internal
         returns (PoolKey memory key)
     {

@@ -129,7 +129,6 @@ contract CLPancakeSwapInfinityTest is BasePancakeSwapInfinity {
     }
 
     function test_infiClSwap_infiInitializeClPool() public {
-        MockERC20 _token = new MockERC20("token", "token", 18);
         PoolKey memory _poolKey = PoolKey({
             currency0: currency0,
             currency1: currency2,
