@@ -4,36 +4,36 @@ pragma solidity ^0.8.13;
 import {Test, console} from "forge-std/Test.sol";
 import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
 import {WETH} from "solmate/src/tokens/WETH.sol";
-import {IWETH9} from "pancake-v4-periphery/src/interfaces/external/IWETH9.sol";
+import {IWETH9} from "infinity-periphery/src/interfaces/external/IWETH9.sol";
 import {MockERC20} from "solmate/src/test/utils/mocks/MockERC20.sol";
 
-import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
-import {Currency, CurrencyLibrary} from "pancake-v4-core/src/types/Currency.sol";
-import {IVault} from "pancake-v4-core/src/interfaces/IVault.sol";
-import {Vault} from "pancake-v4-core/src/Vault.sol";
-import {BinPoolManager} from "pancake-v4-core/src/pool-bin/BinPoolManager.sol";
-import {IBinPoolManager} from "pancake-v4-core/src/pool-bin/interfaces/IBinPoolManager.sol";
-import {IHooks} from "pancake-v4-core/src/interfaces/IHooks.sol";
-import {BinPoolParametersHelper} from "pancake-v4-core/src/pool-bin/libraries/BinPoolParametersHelper.sol";
-import {ActionConstants} from "pancake-v4-periphery/src/libraries/ActionConstants.sol";
-import {Plan, Planner} from "pancake-v4-periphery/src/libraries/Planner.sol";
-import {BinPositionManager} from "pancake-v4-periphery/src/pool-bin/BinPositionManager.sol";
-import {Actions} from "pancake-v4-periphery/src/libraries/Actions.sol";
-import {IBinRouterBase} from "pancake-v4-periphery/src/pool-bin/interfaces/IBinRouterBase.sol";
-import {BinLiquidityHelper} from "pancake-v4-periphery/test/pool-bin/helper/BinLiquidityHelper.sol";
-import {IBinPositionManager} from "pancake-v4-periphery/src/pool-bin/interfaces/IBinPositionManager.sol";
-import {PathKey} from "pancake-v4-periphery/src/libraries/PathKey.sol";
-import {BinPool} from "pancake-v4-core/src/pool-bin/libraries/BinPool.sol";
+import {PoolKey} from "infinity-core/src/types/PoolKey.sol";
+import {Currency, CurrencyLibrary} from "infinity-core/src/types/Currency.sol";
+import {IVault} from "infinity-core/src/interfaces/IVault.sol";
+import {Vault} from "infinity-core/src/Vault.sol";
+import {BinPoolManager} from "infinity-core/src/pool-bin/BinPoolManager.sol";
+import {IBinPoolManager} from "infinity-core/src/pool-bin/interfaces/IBinPoolManager.sol";
+import {IHooks} from "infinity-core/src/interfaces/IHooks.sol";
+import {BinPoolParametersHelper} from "infinity-core/src/pool-bin/libraries/BinPoolParametersHelper.sol";
+import {ActionConstants} from "infinity-periphery/src/libraries/ActionConstants.sol";
+import {Plan, Planner} from "infinity-periphery/src/libraries/Planner.sol";
+import {BinPositionManager} from "infinity-periphery/src/pool-bin/BinPositionManager.sol";
+import {Actions} from "infinity-periphery/src/libraries/Actions.sol";
+import {IBinRouterBase} from "infinity-periphery/src/pool-bin/interfaces/IBinRouterBase.sol";
+import {BinLiquidityHelper} from "infinity-periphery/test/pool-bin/helper/BinLiquidityHelper.sol";
+import {IBinPositionManager} from "infinity-periphery/src/pool-bin/interfaces/IBinPositionManager.sol";
+import {PathKey} from "infinity-periphery/src/libraries/PathKey.sol";
+import {BinPool} from "infinity-core/src/pool-bin/libraries/BinPool.sol";
 
-import {BasePancakeSwapV4} from "./BasePancakeSwapV4.sol";
+import {BasePancakeSwapInfinity} from "./BasePancakeSwapInfinity.sol";
 import {UniversalRouter} from "../../src/UniversalRouter.sol";
 import {IUniversalRouter} from "../../src/interfaces/IUniversalRouter.sol";
 import {Constants} from "../../src/libraries/Constants.sol";
 import {Commands} from "../../src/libraries/Commands.sol";
 import {RouterParameters} from "../../src/base/RouterImmutables.sol";
 
-/// @dev similar to BinPancakeSwapV4, except focus on native ETH transfers
-contract BinNativePancakeSwapV4Test is BasePancakeSwapV4, BinLiquidityHelper {
+/// @dev similar to BinPancakeSwapInfinity, except focus on native ETH transfers
+contract BinNativePancakeSwapInfinityTest is BasePancakeSwapInfinity, BinLiquidityHelper {
     using BinPoolParametersHelper for bytes32;
     using Planner for Plan;
 
@@ -76,12 +76,12 @@ contract BinNativePancakeSwapV4Test is BasePancakeSwapV4, BinLiquidityHelper {
             v3InitCodeHash: bytes32(0),
             stableFactory: address(0),
             stableInfo: address(0),
-            v4Vault: address(vault),
-            v4ClPoolManager: address(0),
-            v4BinPoolManager: address(poolManager),
+            infiVault: address(vault),
+            infiClPoolManager: address(0),
+            infiBinPoolManager: address(poolManager),
             v3NFTPositionManager: address(0),
-            v4ClPositionManager: address(0),
-            v4BinPositionManager: address(positionManager)
+            infiClPositionManager: address(0),
+            infiBinPositionManager: address(positionManager)
         });
         router = new UniversalRouter(params);
         _approvePermit2ForCurrency(alice, currency1, address(router), permit2);
@@ -98,7 +98,7 @@ contract BinNativePancakeSwapV4Test is BasePancakeSwapV4, BinLiquidityHelper {
         _mint(poolKey0);
     }
 
-    function test_v4BinSwap_v4InitializeBinPool() public {
+    function test_infiBinSwap_infiInitializeBinPool() public {
         MockERC20 _token = new MockERC20("token", "token", 18);
         PoolKey memory _poolKey = PoolKey({
             currency0: CurrencyLibrary.NATIVE,
@@ -114,11 +114,11 @@ contract BinNativePancakeSwapV4Test is BasePancakeSwapV4, BinLiquidityHelper {
         assertEq(activeId, 0);
 
         // initialize
-        bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.V4_BIN_INITIALIZE_POOL)));
+        bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.INFI_BIN_INITIALIZE_POOL)));
         bytes[] memory inputs = new bytes[](1);
         inputs[0] = abi.encode(_poolKey, ACTIVE_ID_1_1);
         router.execute(commands, inputs);
-        vm.snapshotGasLastCall("test_v4BinSwap_v4InitializeBinPool");
+        vm.snapshotGasLastCall("test_infiBinSwap_infiInitializeBinPool");
 
         // verify
         (activeId,,) = poolManager.getSlot0(_poolKey.toId());
@@ -133,74 +133,74 @@ contract BinNativePancakeSwapV4Test is BasePancakeSwapV4, BinLiquidityHelper {
         router.execute(commands, inputs);
     }
 
-    function test_v4BinSwap_ExactInSingle_NativeIn() public {
+    function test_infiBinSwap_ExactInSingle_NativeIn() public {
         uint128 amountIn = 0.01 ether;
         vm.deal(alice, amountIn);
         vm.startPrank(alice);
 
-        // prepare v4 swap input
+        // prepare infinity swap input
         IBinRouterBase.BinSwapExactInputSingleParams memory params =
             IBinRouterBase.BinSwapExactInputSingleParams(poolKey0, true, amountIn, 0, "");
         plan = Planner.init().add(Actions.BIN_SWAP_EXACT_IN_SINGLE, abi.encode(params));
         bytes memory data = plan.finalizeSwap(poolKey0.currency0, poolKey0.currency1, ActionConstants.MSG_SENDER);
 
-        // call v4_swap
-        bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.V4_SWAP)));
+        // call infi_swap
+        bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.INFI_SWAP)));
         bytes[] memory inputs = new bytes[](1);
         inputs[0] = data;
 
         assertEq(alice.balance, 0.01 ether);
         assertEq(token1.balanceOf(alice), 0 ether);
         router.execute{value: amountIn}(commands, inputs);
-        vm.snapshotGasLastCall("test_v4BinSwap_ExactInSingle_NativeIn");
+        vm.snapshotGasLastCall("test_infiBinSwap_ExactInSingle_NativeIn");
         assertEq(alice.balance, 0 ether);
         assertEq(token1.balanceOf(alice), 9970000000000000); // 0.01 eth * 0.997
     }
 
-    function test_v4BinSwap_ExactInSingle_NativeOut() public {
+    function test_infiBinSwap_ExactInSingle_NativeOut() public {
         uint128 amountIn = 0.01 ether;
         MockERC20(Currency.unwrap(currency1)).mint(alice, amountIn);
         vm.startPrank(alice);
 
-        // prepare v4 swap input
+        // prepare infinity swap input
         IBinRouterBase.BinSwapExactInputSingleParams memory params =
             IBinRouterBase.BinSwapExactInputSingleParams(poolKey0, false, amountIn, 0, "");
         plan = Planner.init().add(Actions.BIN_SWAP_EXACT_IN_SINGLE, abi.encode(params));
         bytes memory data = plan.finalizeSwap(poolKey0.currency1, poolKey0.currency0, ActionConstants.MSG_SENDER);
 
-        // call v4_swap
-        bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.V4_SWAP)));
+        // call infi_swap
+        bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.INFI_SWAP)));
         bytes[] memory inputs = new bytes[](1);
         inputs[0] = data;
 
         assertEq(alice.balance, 0 ether);
         assertEq(token1.balanceOf(alice), 0.01 ether);
         router.execute(commands, inputs);
-        vm.snapshotGasLastCall("test_v4BinSwap_ExactInSingle_NativeOut");
+        vm.snapshotGasLastCall("test_infiBinSwap_ExactInSingle_NativeOut");
         assertEq(alice.balance, 9970000000000000);
         assertEq(token1.balanceOf(alice), 0); // 0.01 eth * 0.997
     }
 
-    function test_v4BinSwap_ExactInSingle_NativeOut_RouterRecipient() public {
+    function test_infiBinSwap_ExactInSingle_NativeOut_RouterRecipient() public {
         uint128 amountIn = 0.01 ether;
         MockERC20(Currency.unwrap(currency1)).mint(alice, amountIn);
         vm.startPrank(alice);
 
-        // prepare v4 swap input
+        // prepare infinity swap input
         IBinRouterBase.BinSwapExactInputSingleParams memory params =
             IBinRouterBase.BinSwapExactInputSingleParams(poolKey0, false, amountIn, 0, "");
         plan = Planner.init().add(Actions.BIN_SWAP_EXACT_IN_SINGLE, abi.encode(params));
         bytes memory data = plan.finalizeSwap(poolKey0.currency1, poolKey0.currency0, ActionConstants.ADDRESS_THIS);
 
-        // call v4_swap
-        bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.V4_SWAP)));
+        // call infi_swap
+        bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.INFI_SWAP)));
         bytes[] memory inputs = new bytes[](1);
         inputs[0] = data;
 
         assertEq(alice.balance, 0 ether);
         assertEq(token1.balanceOf(alice), 0.01 ether);
         router.execute(commands, inputs);
-        vm.snapshotGasLastCall("test_v4BinSwap_ExactInSingle_NativeOut_RouterRecipient");
+        vm.snapshotGasLastCall("test_infiBinSwap_ExactInSingle_NativeOut_RouterRecipient");
         assertEq(address(router).balance, 9970000000000000);
         assertEq(token1.balanceOf(alice), 0); // 0.01 eth * 0.997
     }

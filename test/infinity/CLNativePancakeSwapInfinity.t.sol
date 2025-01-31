@@ -3,40 +3,40 @@ pragma solidity ^0.8.13;
 
 import {Test, console} from "forge-std/Test.sol";
 import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
-import {IWETH9} from "pancake-v4-periphery/src/interfaces/external/IWETH9.sol";
+import {IWETH9} from "infinity-periphery/src/interfaces/external/IWETH9.sol";
 import {WETH} from "solmate/src/tokens/WETH.sol";
 import {MockERC20} from "solmate/src/test/utils/mocks/MockERC20.sol";
 
-import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
-import {Currency, CurrencyLibrary} from "pancake-v4-core/src/types/Currency.sol";
-import {IVault} from "pancake-v4-core/src/interfaces/IVault.sol";
-import {Vault} from "pancake-v4-core/src/Vault.sol";
-import {CLPoolManager} from "pancake-v4-core/src/pool-cl/CLPoolManager.sol";
-import {ICLPoolManager} from "pancake-v4-core/src/pool-cl/interfaces/ICLPoolManager.sol";
-import {FixedPoint96} from "pancake-v4-core/src/pool-cl/libraries/FixedPoint96.sol";
-import {IHooks} from "pancake-v4-core/src/interfaces/IHooks.sol";
-import {CLPoolParametersHelper} from "pancake-v4-core/src/pool-cl/libraries/CLPoolParametersHelper.sol";
-import {SqrtPriceMath} from "pancake-v4-core/src/pool-cl/libraries/SqrtPriceMath.sol";
-import {TickMath} from "pancake-v4-core/src/pool-cl/libraries/TickMath.sol";
-import {ActionConstants} from "pancake-v4-periphery/src/libraries/ActionConstants.sol";
-import {Plan, Planner} from "pancake-v4-periphery/src/libraries/Planner.sol";
-import {CLPositionDescriptorOffChain} from "pancake-v4-periphery/src/pool-cl/CLPositionDescriptorOffChain.sol";
-import {CLPositionManager} from "pancake-v4-periphery/src/pool-cl/CLPositionManager.sol";
-import {Actions} from "pancake-v4-periphery/src/libraries/Actions.sol";
-import {ICLRouterBase} from "pancake-v4-periphery/src/pool-cl/interfaces/ICLRouterBase.sol";
-import {LiquidityAmounts} from "pancake-v4-periphery/src/pool-cl/libraries/LiquidityAmounts.sol";
-import {PathKey} from "pancake-v4-periphery/src/libraries/PathKey.sol";
-import {CLPool} from "pancake-v4-core/src/pool-cl/libraries/CLPool.sol";
+import {PoolKey} from "infinity-core/src/types/PoolKey.sol";
+import {Currency, CurrencyLibrary} from "infinity-core/src/types/Currency.sol";
+import {IVault} from "infinity-core/src/interfaces/IVault.sol";
+import {Vault} from "infinity-core/src/Vault.sol";
+import {CLPoolManager} from "infinity-core/src/pool-cl/CLPoolManager.sol";
+import {ICLPoolManager} from "infinity-core/src/pool-cl/interfaces/ICLPoolManager.sol";
+import {FixedPoint96} from "infinity-core/src/pool-cl/libraries/FixedPoint96.sol";
+import {IHooks} from "infinity-core/src/interfaces/IHooks.sol";
+import {CLPoolParametersHelper} from "infinity-core/src/pool-cl/libraries/CLPoolParametersHelper.sol";
+import {SqrtPriceMath} from "infinity-core/src/pool-cl/libraries/SqrtPriceMath.sol";
+import {TickMath} from "infinity-core/src/pool-cl/libraries/TickMath.sol";
+import {ActionConstants} from "infinity-periphery/src/libraries/ActionConstants.sol";
+import {Plan, Planner} from "infinity-periphery/src/libraries/Planner.sol";
+import {CLPositionDescriptorOffChain} from "infinity-periphery/src/pool-cl/CLPositionDescriptorOffChain.sol";
+import {CLPositionManager} from "infinity-periphery/src/pool-cl/CLPositionManager.sol";
+import {Actions} from "infinity-periphery/src/libraries/Actions.sol";
+import {ICLRouterBase} from "infinity-periphery/src/pool-cl/interfaces/ICLRouterBase.sol";
+import {LiquidityAmounts} from "infinity-periphery/src/pool-cl/libraries/LiquidityAmounts.sol";
+import {PathKey} from "infinity-periphery/src/libraries/PathKey.sol";
+import {CLPool} from "infinity-core/src/pool-cl/libraries/CLPool.sol";
 
-import {BasePancakeSwapV4} from "./BasePancakeSwapV4.sol";
+import {BasePancakeSwapInfinity} from "./BasePancakeSwapInfinity.sol";
 import {UniversalRouter} from "../../src/UniversalRouter.sol";
 import {IUniversalRouter} from "../../src/interfaces/IUniversalRouter.sol";
 import {Constants} from "../../src/libraries/Constants.sol";
 import {Commands} from "../../src/libraries/Commands.sol";
 import {RouterParameters} from "../../src/base/RouterImmutables.sol";
 
-/// @dev similar to CLPancakeSwapV4, except focus on native ETH transfers
-contract CLNativePancakeSwapV4Test is BasePancakeSwapV4 {
+/// @dev similar to CLPancakeSwapInfinity, except focus on native ETH transfers
+contract CLNativePancakeSwapInfinityTest is BasePancakeSwapInfinity {
     using CLPoolParametersHelper for bytes32;
     using Planner for Plan;
 
@@ -67,7 +67,7 @@ contract CLNativePancakeSwapV4Test is BasePancakeSwapV4 {
         token1 = MockERC20(Currency.unwrap(currency1));
 
         CLPositionDescriptorOffChain pd =
-            new CLPositionDescriptorOffChain("https://pancakeswap.finance/v4/pool-cl/positions/");
+            new CLPositionDescriptorOffChain("https://pancakeswap.finance/infinity/pool-cl/positions/");
         positionManager = new CLPositionManager(vault, poolManager, permit2, 100_000, pd, IWETH9(address(weth9)));
         _approvePermit2ForCurrency(address(this), currency1, address(positionManager), permit2);
 
@@ -81,12 +81,12 @@ contract CLNativePancakeSwapV4Test is BasePancakeSwapV4 {
             v3InitCodeHash: bytes32(0),
             stableFactory: address(0),
             stableInfo: address(0),
-            v4Vault: address(vault),
-            v4ClPoolManager: address(poolManager),
-            v4BinPoolManager: address(0),
+            infiVault: address(vault),
+            infiClPoolManager: address(poolManager),
+            infiBinPoolManager: address(0),
             v3NFTPositionManager: address(0),
-            v4ClPositionManager: address(positionManager),
-            v4BinPositionManager: address(0)
+            infiClPositionManager: address(positionManager),
+            infiBinPositionManager: address(0)
         });
         router = new UniversalRouter(params);
         _approvePermit2ForCurrency(alice, currency1, address(router), permit2);
@@ -103,7 +103,7 @@ contract CLNativePancakeSwapV4Test is BasePancakeSwapV4 {
         _mint(poolKey0);
     }
 
-    function test_v4ClSwap_v4InitializeClPool() public {
+    function test_infiClSwap_infiInitializeClPool() public {
         MockERC20 _token = new MockERC20("token", "token", 18);
         PoolKey memory _poolKey = PoolKey({
             currency0: CurrencyLibrary.NATIVE,
@@ -119,11 +119,11 @@ contract CLNativePancakeSwapV4Test is BasePancakeSwapV4 {
         assertEq(sqrtPriceX96, 0);
 
         // initialize
-        bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.V4_CL_INITIALIZE_POOL)));
+        bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.INFI_CL_INITIALIZE_POOL)));
         bytes[] memory inputs = new bytes[](1);
         inputs[0] = abi.encode(_poolKey, SQRT_PRICE_1_1);
         router.execute(commands, inputs);
-        vm.snapshotGasLastCall("test_v4ClSwap_v4InitializeClPool");
+        vm.snapshotGasLastCall("test_infiClSwap_infiInitializeClPool");
 
         // verify
         (sqrtPriceX96,,,) = poolManager.getSlot0(_poolKey.toId());
@@ -138,19 +138,19 @@ contract CLNativePancakeSwapV4Test is BasePancakeSwapV4 {
         router.execute(commands, inputs);
     }
 
-    function test_v4ClSwap_ExactInSingle_NativeIn() public {
+    function test_infiClSwap_ExactInSingle_NativeIn() public {
         uint128 amountIn = 0.01 ether;
         vm.deal(alice, amountIn);
         vm.startPrank(alice);
 
-        // prepare v4 swap input
+        // prepare infinity swap input
         ICLRouterBase.CLSwapExactInputSingleParams memory params =
             ICLRouterBase.CLSwapExactInputSingleParams(poolKey0, true, amountIn, 0, "");
         plan = Planner.init().add(Actions.CL_SWAP_EXACT_IN_SINGLE, abi.encode(params));
         bytes memory data = plan.finalizeSwap(poolKey0.currency0, poolKey0.currency1, ActionConstants.MSG_SENDER);
 
-        // call v4_swap
-        bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.V4_SWAP)));
+        // call infi_swap
+        bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.INFI_SWAP)));
         bytes[] memory inputs = new bytes[](1);
         inputs[0] = data;
 
@@ -158,24 +158,24 @@ contract CLNativePancakeSwapV4Test is BasePancakeSwapV4 {
         assertEq(alice.balance, 0.01 ether);
         assertEq(token1.balanceOf(alice), 0 ether);
         router.execute{value: amountIn}(commands, inputs);
-        vm.snapshotGasLastCall("test_v4ClSwap_ExactInSingle_NativeIn");
+        vm.snapshotGasLastCall("test_infiClSwap_ExactInSingle_NativeIn");
         assertEq(alice.balance, 0 ether);
         assertEq(token1.balanceOf(alice), 9969940541342903); // around 0.01 eth * 0.997 - slippage
     }
 
-    function test_v4ClSwap_ExactInSingle_NativeOut() public {
+    function test_infiClSwap_ExactInSingle_NativeOut() public {
         uint128 amountIn = 0.01 ether;
         MockERC20(Currency.unwrap(currency1)).mint(alice, amountIn);
         vm.startPrank(alice);
 
-        // prepare v4 swap input
+        // prepare infinity swap input
         ICLRouterBase.CLSwapExactInputSingleParams memory params =
             ICLRouterBase.CLSwapExactInputSingleParams(poolKey0, false, amountIn, 0, "");
         plan = Planner.init().add(Actions.CL_SWAP_EXACT_IN_SINGLE, abi.encode(params));
         bytes memory data = plan.finalizeSwap(poolKey0.currency1, poolKey0.currency0, ActionConstants.MSG_SENDER);
 
-        // call v4_swap
-        bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.V4_SWAP)));
+        // call infi_swap
+        bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.INFI_SWAP)));
         bytes[] memory inputs = new bytes[](1);
         inputs[0] = data;
 
@@ -183,24 +183,24 @@ contract CLNativePancakeSwapV4Test is BasePancakeSwapV4 {
         assertEq(alice.balance, 0 ether);
         assertEq(token1.balanceOf(alice), 0.01 ether);
         router.execute(commands, inputs);
-        vm.snapshotGasLastCall("test_v4ClSwap_ExactInSingle_NativeOut");
+        vm.snapshotGasLastCall("test_infiClSwap_ExactInSingle_NativeOut");
         assertEq(alice.balance, 9969940541342903); // around 0.01 eth * 0.997 - slippage
         assertEq(token1.balanceOf(alice), 0);
     }
 
-    function test_v4ClSwap_ExactInSingle_NativeOut_RouterRecipient() public {
+    function test_infiClSwap_ExactInSingle_NativeOut_RouterRecipient() public {
         uint128 amountIn = 0.01 ether;
         MockERC20(Currency.unwrap(currency1)).mint(alice, amountIn);
         vm.startPrank(alice);
 
-        // prepare v4 swap input
+        // prepare infinity swap input
         ICLRouterBase.CLSwapExactInputSingleParams memory params =
             ICLRouterBase.CLSwapExactInputSingleParams(poolKey0, false, amountIn, 0, "");
         plan = Planner.init().add(Actions.CL_SWAP_EXACT_IN_SINGLE, abi.encode(params));
         bytes memory data = plan.finalizeSwap(poolKey0.currency1, poolKey0.currency0, ActionConstants.ADDRESS_THIS);
 
-        // call v4_swap
-        bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.V4_SWAP)));
+        // call infi_swap
+        bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.INFI_SWAP)));
         bytes[] memory inputs = new bytes[](1);
         inputs[0] = data;
 

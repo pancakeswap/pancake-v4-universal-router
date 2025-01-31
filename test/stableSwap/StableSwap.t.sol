@@ -3,7 +3,7 @@ pragma solidity ^0.8.13;
 
 import {Test, console} from "forge-std/Test.sol";
 import {ERC20} from "solmate/src/tokens/ERC20.sol";
-import {ActionConstants} from "pancake-v4-periphery/src/libraries/ActionConstants.sol";
+import {ActionConstants} from "infinity-periphery/src/libraries/ActionConstants.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 import {IPermit2} from "permit2/src/interfaces/IPermit2.sol";
@@ -44,12 +44,12 @@ abstract contract StableSwapTest is Test {
             v3InitCodeHash: bytes32(0),
             stableFactory: address(STABLE_FACTORY),
             stableInfo: address(STABLE_INFO),
-            v4Vault: address(0),
-            v4ClPoolManager: address(0),
-            v4BinPoolManager: address(0),
+            infiVault: address(0),
+            infiClPoolManager: address(0),
+            infiBinPoolManager: address(0),
             v3NFTPositionManager: address(0),
-            v4ClPositionManager: address(0),
-            v4BinPositionManager: address(0)
+            infiClPositionManager: address(0),
+            infiBinPositionManager: address(0)
         });
         router = new UniversalRouter(params);
 

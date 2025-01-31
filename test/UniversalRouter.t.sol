@@ -4,8 +4,8 @@ pragma solidity ^0.8.15;
 import "forge-std/Test.sol";
 import {ERC20} from "solmate/src/tokens/ERC20.sol";
 import {IERC165} from "@openzeppelin/contracts/interfaces/IERC165.sol";
-import {ActionConstants} from "pancake-v4-periphery/src/libraries/ActionConstants.sol";
-import {Permit2SignatureHelpers} from "pancake-v4-periphery/test/shared/Permit2SignatureHelpers.sol";
+import {ActionConstants} from "infinity-periphery/src/libraries/ActionConstants.sol";
+import {Permit2SignatureHelpers} from "infinity-periphery/test/shared/Permit2SignatureHelpers.sol";
 import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
 import {DeployPermit2} from "permit2/test/utils/DeployPermit2.sol";
 import {StructBuilder} from "permit2/test/utils/StructBuilder.sol";
@@ -56,12 +56,12 @@ contract UniversalRouterTest is Test, Permit2SignatureHelpers, DeployPermit2 {
             v3InitCodeHash: bytes32(0),
             stableFactory: address(0),
             stableInfo: address(0),
-            v4Vault: address(0),
-            v4ClPoolManager: address(0),
-            v4BinPoolManager: address(0),
+            infiVault: address(0),
+            infiClPoolManager: address(0),
+            infiBinPoolManager: address(0),
             v3NFTPositionManager: address(0),
-            v4ClPositionManager: address(0),
-            v4BinPositionManager: address(0)
+            infiClPositionManager: address(0),
+            infiBinPositionManager: address(0)
         });
         router = new UniversalRouter(params);
         assertEq(router.owner(), address(this));

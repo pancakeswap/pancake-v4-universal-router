@@ -2,7 +2,7 @@
 // Copyright (C) 2024 PancakeSwap
 pragma solidity ^0.8.0;
 
-import {ActionConstants} from "pancake-v4-periphery/src/libraries/ActionConstants.sol";
+import {ActionConstants} from "infinity-periphery/src/libraries/ActionConstants.sol";
 import {RouterImmutables} from "../../base/RouterImmutables.sol";
 import {Payments} from "../Payments.sol";
 import {Permit2Payments} from "../Permit2Payments.sol";

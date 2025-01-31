@@ -16,7 +16,7 @@ import {RouterParameters} from "../../../src/base/RouterImmutables.sol";
 contract DeployOpbnb is DeployUniversalRouter {
     /// @notice contract address will be based on deployment salt
     function getDeploymentSalt() public pure override returns (bytes32) {
-        return keccak256("PANCAKE-V4-UNIVERSAL-ROUTER/UniversalRouter/0.0001");
+        return keccak256("INFINITY-UNIVERSAL-ROUTER/UniversalRouter/0.0001");
     }
 
     function setUp() public override {
@@ -30,12 +30,12 @@ contract DeployOpbnb is DeployUniversalRouter {
             v3InitCodeHash: 0x6ce8eb472fa82df5469c6ab6d485f17c3ad13c8cd7af59b3d4a8026c5ce0f7e2,
             stableFactory: UNSUPPORTED_PROTOCOL,
             stableInfo: UNSUPPORTED_PROTOCOL,
-            v4Vault: UNSUPPORTED_PROTOCOL,
-            v4ClPoolManager: UNSUPPORTED_PROTOCOL,
-            v4BinPoolManager: UNSUPPORTED_PROTOCOL,
+            infiVault: UNSUPPORTED_PROTOCOL,
+            infiClPoolManager: UNSUPPORTED_PROTOCOL,
+            infiBinPoolManager: UNSUPPORTED_PROTOCOL,
             v3NFTPositionManager: UNSUPPORTED_PROTOCOL,
-            v4ClPositionManager: UNSUPPORTED_PROTOCOL,
-            v4BinPositionManager: UNSUPPORTED_PROTOCOL
+            infiClPositionManager: UNSUPPORTED_PROTOCOL,
+            infiBinPositionManager: UNSUPPORTED_PROTOCOL
         });
 
         unsupported = 0xFE6508f0015C778Bdcc1fB5465bA5ebE224C9912;

@@ -2,7 +2,7 @@
 // Copyright (C) 2024 PancakeSwap
 pragma solidity ^0.8.0;
 
-import {ActionConstants} from "pancake-v4-periphery/src/libraries/ActionConstants.sol";
+import {ActionConstants} from "infinity-periphery/src/libraries/ActionConstants.sol";
 import {SafeCast} from "./SafeCast.sol";
 import {IPancakeV3Pool} from "./interfaces/IPancakeV3Pool.sol";
 import {IPancakeV3SwapCallback} from "./interfaces/IPancakeV3SwapCallback.sol";
@@ -13,7 +13,7 @@ import {RouterImmutables} from "../../../base/RouterImmutables.sol";
 import {Permit2Payments} from "../../Permit2Payments.sol";
 import {MaxInputAmount} from "../../../libraries/MaxInputAmount.sol";
 import {ERC20} from "solmate/src/tokens/ERC20.sol";
-import {CalldataDecoder} from "pancake-v4-periphery/src/libraries/CalldataDecoder.sol";
+import {CalldataDecoder} from "infinity-periphery/src/libraries/CalldataDecoder.sol";
 
 /// @title Router for PancakeSwap v3 Trades
 abstract contract V3SwapRouter is RouterImmutables, Permit2Payments, IPancakeV3SwapCallback {

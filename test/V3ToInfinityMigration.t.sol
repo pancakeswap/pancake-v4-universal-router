@@ -3,51 +3,51 @@ pragma solidity ^0.8.15;
 
 import {Test, console} from "forge-std/Test.sol";
 import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
-import {IWETH9} from "pancake-v4-periphery/src/interfaces/external/IWETH9.sol";
+import {IWETH9} from "infinity-periphery/src/interfaces/external/IWETH9.sol";
 import {WETH} from "solmate/src/tokens/WETH.sol";
 import {MockERC20} from "solmate/src/test/utils/mocks/MockERC20.sol";
 
-import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
-import {Currency} from "pancake-v4-core/src/types/Currency.sol";
-import {IVault} from "pancake-v4-core/src/interfaces/IVault.sol";
-import {Vault} from "pancake-v4-core/src/Vault.sol";
-import {CLPoolManager} from "pancake-v4-core/src/pool-cl/CLPoolManager.sol";
-import {ICLPoolManager} from "pancake-v4-core/src/pool-cl/interfaces/ICLPoolManager.sol";
-import {BinPoolManager} from "pancake-v4-core/src/pool-bin/BinPoolManager.sol";
-import {IBinPoolManager} from "pancake-v4-core/src/pool-bin/interfaces/IBinPoolManager.sol";
-import {FixedPoint96} from "pancake-v4-core/src/pool-cl/libraries/FixedPoint96.sol";
-import {IHooks} from "pancake-v4-core/src/interfaces/IHooks.sol";
-import {CLPoolParametersHelper} from "pancake-v4-core/src/pool-cl/libraries/CLPoolParametersHelper.sol";
-import {BinPoolParametersHelper} from "pancake-v4-core/src/pool-bin/libraries/BinPoolParametersHelper.sol";
-import {ActionConstants} from "pancake-v4-periphery/src/libraries/ActionConstants.sol";
-import {Plan, Planner} from "pancake-v4-periphery/src/libraries/Planner.sol";
-import {CLPositionManager} from "pancake-v4-periphery/src/pool-cl/CLPositionManager.sol";
-import {CLPositionDescriptorOffChain} from "pancake-v4-periphery/src/pool-cl/CLPositionDescriptorOffChain.sol";
-import {BinPositionManager} from "pancake-v4-periphery/src/pool-bin/BinPositionManager.sol";
-import {Actions} from "pancake-v4-periphery/src/libraries/Actions.sol";
+import {PoolKey} from "infinity-core/src/types/PoolKey.sol";
+import {Currency} from "infinity-core/src/types/Currency.sol";
+import {IVault} from "infinity-core/src/interfaces/IVault.sol";
+import {Vault} from "infinity-core/src/Vault.sol";
+import {CLPoolManager} from "infinity-core/src/pool-cl/CLPoolManager.sol";
+import {ICLPoolManager} from "infinity-core/src/pool-cl/interfaces/ICLPoolManager.sol";
+import {BinPoolManager} from "infinity-core/src/pool-bin/BinPoolManager.sol";
+import {IBinPoolManager} from "infinity-core/src/pool-bin/interfaces/IBinPoolManager.sol";
+import {FixedPoint96} from "infinity-core/src/pool-cl/libraries/FixedPoint96.sol";
+import {IHooks} from "infinity-core/src/interfaces/IHooks.sol";
+import {CLPoolParametersHelper} from "infinity-core/src/pool-cl/libraries/CLPoolParametersHelper.sol";
+import {BinPoolParametersHelper} from "infinity-core/src/pool-bin/libraries/BinPoolParametersHelper.sol";
+import {ActionConstants} from "infinity-periphery/src/libraries/ActionConstants.sol";
+import {Plan, Planner} from "infinity-periphery/src/libraries/Planner.sol";
+import {CLPositionManager} from "infinity-periphery/src/pool-cl/CLPositionManager.sol";
+import {CLPositionDescriptorOffChain} from "infinity-periphery/src/pool-cl/CLPositionDescriptorOffChain.sol";
+import {BinPositionManager} from "infinity-periphery/src/pool-bin/BinPositionManager.sol";
+import {Actions} from "infinity-periphery/src/libraries/Actions.sol";
 import {IV3NonfungiblePositionManager} from
-    "pancake-v4-periphery/src/interfaces/external/IV3NonfungiblePositionManager.sol";
-import {IERC721Permit} from "pancake-v4-periphery/src/pool-cl/interfaces/IERC721Permit.sol";
-import {IPositionManager} from "pancake-v4-periphery/src/interfaces/IPositionManager.sol";
-import {IBinPositionManager} from "pancake-v4-periphery/src/pool-bin/interfaces/IBinPositionManager.sol";
-import {OldVersionHelper} from "pancake-v4-periphery/test/helpers/OldVersionHelper.sol";
-import {BinLiquidityHelper} from "pancake-v4-periphery/test/pool-bin/helper/BinLiquidityHelper.sol";
+    "infinity-periphery/src/interfaces/external/IV3NonfungiblePositionManager.sol";
+import {IERC721Permit} from "infinity-periphery/src/interfaces/IERC721Permit.sol";
+import {IPositionManager} from "infinity-periphery/src/interfaces/IPositionManager.sol";
+import {IBinPositionManager} from "infinity-periphery/src/pool-bin/interfaces/IBinPositionManager.sol";
+import {OldVersionHelper} from "infinity-periphery/test/helpers/OldVersionHelper.sol";
+import {BinLiquidityHelper} from "infinity-periphery/test/pool-bin/helper/BinLiquidityHelper.sol";
 
 import {IPancakeV3PoolDeployer} from "../src/modules/pancakeswap/v3/interfaces/IPancakeV3PoolDeployer.sol";
 import {IPancakeV3Factory} from "../src/modules/pancakeswap/v3/interfaces/IPancakeV3Factory.sol";
-import {V3ToV4Migrator} from "../src/modules/V3ToV4Migrator.sol";
+import {V3ToInfinityMigrator} from "../src/modules/V3ToInfinityMigrator.sol";
 import {IUniversalRouter} from "../src/interfaces/IUniversalRouter.sol";
 import {Commands} from "../src/libraries/Commands.sol";
 import {RouterParameters} from "../src/base/RouterImmutables.sol";
 import {Dispatcher} from "../src/base/Dispatcher.sol";
 import {UniversalRouter} from "../src/UniversalRouter.sol";
-import {BasePancakeSwapV4} from "./v4/BasePancakeSwapV4.sol";
+import {BasePancakeSwapInfinity} from "./infinity/BasePancakeSwapInfinity.sol";
 
 interface IPancakeV3LikePairFactory {
     function createPool(address tokenA, address tokenB, uint24 fee) external returns (address pool);
 }
 
-contract V3ToV4MigrationTest is BasePancakeSwapV4, OldVersionHelper, BinLiquidityHelper {
+contract V3ToInfinityMigrationTest is BasePancakeSwapInfinity, OldVersionHelper, BinLiquidityHelper {
     using BinPoolParametersHelper for bytes32;
     using CLPoolParametersHelper for bytes32;
     using Planner for Plan;
@@ -62,7 +62,7 @@ contract V3ToV4MigrationTest is BasePancakeSwapV4, OldVersionHelper, BinLiquidit
     uint256 alicePK;
     uint256 v3TokenId;
 
-    // v4 related
+    // infinity related
     IVault vault;
     IBinPoolManager binPoolManager;
     BinPositionManager binPositionManager;
@@ -112,7 +112,7 @@ contract V3ToV4MigrationTest is BasePancakeSwapV4, OldVersionHelper, BinLiquidit
         vm.stopPrank();
 
         ///////////////////////////////////
-        //////////// v4 setup /////////////
+        ////////// infinity setup /////////
         ///////////////////////////////////
         vault = IVault(new Vault());
         binPoolManager = new BinPoolManager(vault);
@@ -125,7 +125,7 @@ contract V3ToV4MigrationTest is BasePancakeSwapV4, OldVersionHelper, BinLiquidit
         _approvePermit2ForCurrency(address(this), currency1, address(binPositionManager), permit2);
 
         CLPositionDescriptorOffChain pd =
-            new CLPositionDescriptorOffChain("https://pancakeswap.finance/v4/pool-cl/positions/");
+            new CLPositionDescriptorOffChain("https://pancakeswap.finance/infinity/pool-cl/positions/");
         clPositionManager = new CLPositionManager(vault, clPoolManager, permit2, 100_000, pd, IWETH9(address(weth)));
         _approvePermit2ForCurrency(address(this), currency0, address(clPositionManager), permit2);
         _approvePermit2ForCurrency(address(this), currency1, address(clPositionManager), permit2);
@@ -163,12 +163,12 @@ contract V3ToV4MigrationTest is BasePancakeSwapV4, OldVersionHelper, BinLiquidit
             v3InitCodeHash: bytes32(0),
             stableFactory: address(0),
             stableInfo: address(0),
-            v4Vault: address(vault),
-            v4ClPoolManager: address(clPoolManager),
-            v4BinPoolManager: address(binPoolManager),
+            infiVault: address(vault),
+            infiClPoolManager: address(clPoolManager),
+            infiBinPoolManager: address(binPoolManager),
             v3NFTPositionManager: address(v3Nfpm),
-            v4ClPositionManager: address(clPositionManager),
-            v4BinPositionManager: address(binPositionManager)
+            infiClPositionManager: address(clPositionManager),
+            infiBinPositionManager: address(binPositionManager)
         });
         router = new UniversalRouter(params);
         _approvePermit2ForCurrency(alice, currency0, address(router), permit2);
@@ -188,7 +188,7 @@ contract V3ToV4MigrationTest is BasePancakeSwapV4, OldVersionHelper, BinLiquidit
         bytes[] memory inputs = new bytes[](1);
         inputs[0] = abi.encodePacked(IV3NonfungiblePositionManager.collect.selector, abi.encode(params));
 
-        vm.expectRevert(abi.encodeWithSelector(V3ToV4Migrator.NotAuthorizedForToken.selector, params.tokenId));
+        vm.expectRevert(abi.encodeWithSelector(V3ToInfinityMigrator.NotAuthorizedForToken.selector, params.tokenId));
         router.execute(commands, inputs);
     }
 
@@ -212,7 +212,9 @@ contract V3ToV4MigrationTest is BasePancakeSwapV4, OldVersionHelper, BinLiquidit
         inputs[0] = abi.encodePacked(IV3NonfungiblePositionManager.mint.selector, abi.encode(params));
 
         vm.expectRevert(
-            abi.encodeWithSelector(V3ToV4Migrator.InvalidAction.selector, IV3NonfungiblePositionManager.mint.selector)
+            abi.encodeWithSelector(
+                V3ToInfinityMigrator.InvalidAction.selector, IV3NonfungiblePositionManager.mint.selector
+            )
         );
         router.execute(commands, inputs);
     }
@@ -283,22 +285,22 @@ contract V3ToV4MigrationTest is BasePancakeSwapV4, OldVersionHelper, BinLiquidit
         assertEq(token1.balanceOf(address(router)), 9999999999999999999);
     }
 
-    function test_v4CLPositionmanger_InvalidAction() public {
+    function test_infiCLPositionmanger_InvalidAction() public {
         Plan memory planner = Planner.init();
 
         // prep universal router actions
-        bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.V4_CL_POSITION_CALL)));
+        bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.INFI_CL_POSITION_CALL)));
         bytes[] memory inputs = new bytes[](1);
 
         bytes4 invalidSelector = IPositionManager.modifyLiquiditiesWithoutLock.selector;
         inputs[0] = abi.encodePacked(invalidSelector, abi.encode(planner.encode(), block.timestamp));
-        vm.expectRevert(abi.encodeWithSelector(V3ToV4Migrator.InvalidAction.selector, invalidSelector));
+        vm.expectRevert(abi.encodeWithSelector(V3ToInfinityMigrator.InvalidAction.selector, invalidSelector));
         router.execute(commands, inputs);
     }
 
-    function test_v4CLPositionmanger_BlacklistedAction() public {
+    function test_infiCLPositionmanger_BlacklistedAction() public {
         Plan memory planner = Planner.init();
-        bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.V4_CL_POSITION_CALL)));
+        bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.INFI_CL_POSITION_CALL)));
         bytes[] memory inputs = new bytes[](1);
 
         uint256[] memory invalidActions = new uint256[](3);
@@ -313,27 +315,27 @@ contract V3ToV4MigrationTest is BasePancakeSwapV4, OldVersionHelper, BinLiquidit
             );
 
             // verify revert for invalid actions
-            vm.expectRevert(V3ToV4Migrator.OnlyMintAllowed.selector);
+            vm.expectRevert(V3ToInfinityMigrator.OnlyMintAllowed.selector);
             router.execute(commands, inputs);
         }
     }
 
-    function test_v4BinPositionmanger_InvalidAction() public {
+    function test_infiBinPositionmanger_InvalidAction() public {
         Plan memory planner = Planner.init();
 
         // prep universal router actions
-        bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.V4_BIN_POSITION_CALL)));
+        bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.INFI_BIN_POSITION_CALL)));
         bytes[] memory inputs = new bytes[](1);
 
         bytes4 invalidSelector = IPositionManager.modifyLiquiditiesWithoutLock.selector;
         inputs[0] = abi.encodePacked(invalidSelector, abi.encode(planner.encode(), block.timestamp));
-        vm.expectRevert(abi.encodeWithSelector(V3ToV4Migrator.InvalidAction.selector, invalidSelector));
+        vm.expectRevert(abi.encodeWithSelector(V3ToInfinityMigrator.InvalidAction.selector, invalidSelector));
         router.execute(commands, inputs);
     }
 
-    function test_v4BinPositionmanger_BlacklistedAction() public {
+    function test_infiBinPositionmanger_BlacklistedAction() public {
         Plan memory planner = Planner.init();
-        bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.V4_BIN_POSITION_CALL)));
+        bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.INFI_BIN_POSITION_CALL)));
         bytes[] memory inputs = new bytes[](1);
 
         uint256[] memory invalidActions = new uint256[](1);
@@ -346,14 +348,14 @@ contract V3ToV4MigrationTest is BasePancakeSwapV4, OldVersionHelper, BinLiquidit
             );
 
             // verify revert for invalid actions
-            vm.expectRevert(V3ToV4Migrator.OnlyAddLiqudityAllowed.selector);
+            vm.expectRevert(V3ToInfinityMigrator.OnlyAddLiqudityAllowed.selector);
             router.execute(commands, inputs);
         }
     }
 
     /// @dev Assume token0/token1 is aready in universal router from earlier steps on v3
-    ///      then add liquidity to v4 cl and sweep remaining token
-    function test_v4CLPositionmanager_Mint() public {
+    ///      then add liquidity to infinity cl and sweep remaining token
+    function test_infiCLPositionmanager_Mint() public {
         // assume token0/token1 is in universal router
         token0.mint(address(router), 10 ether);
         token1.mint(address(router), 10 ether);
@@ -368,7 +370,7 @@ contract V3ToV4MigrationTest is BasePancakeSwapV4, OldVersionHelper, BinLiquidit
 
         // prep universal router actions
         bytes memory commands = abi.encodePacked(
-            bytes1(uint8(Commands.SWEEP)), bytes1(uint8(Commands.SWEEP)), bytes1(uint8(Commands.V4_CL_POSITION_CALL))
+            bytes1(uint8(Commands.SWEEP)), bytes1(uint8(Commands.SWEEP)), bytes1(uint8(Commands.INFI_CL_POSITION_CALL))
         );
         bytes[] memory inputs = new bytes[](3);
         inputs[0] = abi.encode(token0, address(clPositionManager), 0); // send token to clPositionmanager
@@ -378,7 +380,7 @@ contract V3ToV4MigrationTest is BasePancakeSwapV4, OldVersionHelper, BinLiquidit
 
         vm.prank(alice);
         router.execute(commands, inputs);
-        vm.snapshotGasLastCall("test_v4CLPositionmanager_Mint");
+        vm.snapshotGasLastCall("test_infiCLPositionmanager_Mint");
 
         // verify balance sent back to alice
         assertEq(token0.balanceOf(address(alice)), 9994018262239490337);
@@ -387,8 +389,8 @@ contract V3ToV4MigrationTest is BasePancakeSwapV4, OldVersionHelper, BinLiquidit
     }
 
     /// @dev Assume token0/token1 is aready in universal router from earlier steps on v3
-    ///      then add liquidity to v4 cl and sweep remaining token
-    function test_v4BinPositionmanager_BinAddLiquidity() public {
+    ///      then add liquidity to infinity cl and sweep remaining token
+    function test_infiBinPositionmanager_BinAddLiquidity() public {
         // assume token0/token1 is in universal router
         token0.mint(address(router), 10 ether);
         token1.mint(address(router), 10 ether);
@@ -407,7 +409,7 @@ contract V3ToV4MigrationTest is BasePancakeSwapV4, OldVersionHelper, BinLiquidit
 
         // prep universal router actions
         bytes memory commands = abi.encodePacked(
-            bytes1(uint8(Commands.SWEEP)), bytes1(uint8(Commands.SWEEP)), bytes1(uint8(Commands.V4_BIN_POSITION_CALL))
+            bytes1(uint8(Commands.SWEEP)), bytes1(uint8(Commands.SWEEP)), bytes1(uint8(Commands.INFI_BIN_POSITION_CALL))
         );
         bytes[] memory inputs = new bytes[](3);
         inputs[0] = abi.encode(token0, address(binPositionManager), 0); // send token to binPositionManager
@@ -417,7 +419,7 @@ contract V3ToV4MigrationTest is BasePancakeSwapV4, OldVersionHelper, BinLiquidit
 
         vm.prank(alice);
         router.execute(commands, inputs);
-        vm.snapshotGasLastCall("test_v4BinPositionmanager_BinAddLiquidity");
+        vm.snapshotGasLastCall("test_infiBinPositionmanager_BinAddLiquidity");
 
         // verify balance sent back to alice
         assertEq(token0.balanceOf(address(alice)), 5 ether);

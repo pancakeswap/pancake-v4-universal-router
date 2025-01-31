@@ -1,0 +1,9 @@
+{
+  "test_infiBinSwap_ExactInSingle": "143529",
+  "test_infiBinSwap_ExactIn_MultiHop": "174923",
+  "test_infiBinSwap_ExactIn_SingleHop": "145327",
+  "test_infiBinSwap_ExactOutSingle": "147891",
+  "test_infiBinSwap_ExactOut_MultiHop": "178771",
+  "test_infiBinSwap_ExactOut_SingleHop": "149699",
+  "test_infiBinSwap_InitializeBinPool": "152986"
+}

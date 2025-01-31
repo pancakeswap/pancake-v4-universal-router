@@ -52,12 +52,12 @@ abstract contract DeployUniversalRouter is Script {
             v3InitCodeHash: params.v3InitCodeHash,
             stableFactory: mapUnsupported(params.stableFactory),
             stableInfo: mapUnsupported(params.stableInfo),
-            v4Vault: mapUnsupported(params.v4Vault),
-            v4ClPoolManager: mapUnsupported(params.v4ClPoolManager),
-            v4BinPoolManager: mapUnsupported(params.v4BinPoolManager),
+            infiVault: mapUnsupported(params.infiVault),
+            infiClPoolManager: mapUnsupported(params.infiClPoolManager),
+            infiBinPoolManager: mapUnsupported(params.infiBinPoolManager),
             v3NFTPositionManager: mapUnsupported(params.v3NFTPositionManager),
-            v4ClPositionManager: mapUnsupported(params.v4ClPositionManager),
-            v4BinPositionManager: mapUnsupported(params.v4BinPositionManager)
+            infiClPositionManager: mapUnsupported(params.infiClPositionManager),
+            infiBinPositionManager: mapUnsupported(params.infiBinPositionManager)
         });
 
         logParams();
@@ -92,12 +92,12 @@ abstract contract DeployUniversalRouter is Script {
         console2.logBytes32(params.v3InitCodeHash);
         console2.log("stableFactory:", params.stableFactory);
         console2.log("stableInfo:", params.stableInfo);
-        console2.log("v4Vault:", params.v4Vault);
-        console2.log("v4ClPoolManager:", params.v4ClPoolManager);
-        console2.log("v4BinPoolManager:", params.v4BinPoolManager);
+        console2.log("infiVault:", params.infiVault);
+        console2.log("infiClPoolManager:", params.infiClPoolManager);
+        console2.log("infiBinPoolManager:", params.infiBinPoolManager);
         console2.log("v3NFTPositionManager:", params.v3NFTPositionManager);
-        console2.log("v4ClPositionManager:", params.v4ClPositionManager);
-        console2.log("v4BinPositionManager:", params.v4BinPositionManager);
+        console2.log("infiClPositionManager:", params.infiClPositionManager);
+        console2.log("infiBinPositionManager:", params.infiBinPositionManager);
     }
 
     function mapUnsupported(address protocol) internal view returns (address) {

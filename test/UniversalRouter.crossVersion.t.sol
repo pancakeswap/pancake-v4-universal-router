@@ -3,35 +3,35 @@ pragma solidity ^0.8.15;
 
 import {Test, console} from "forge-std/Test.sol";
 import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
-import {IWETH9} from "pancake-v4-periphery/src/interfaces/external/IWETH9.sol";
+import {IWETH9} from "infinity-periphery/src/interfaces/external/IWETH9.sol";
 import {WETH} from "solmate/src/tokens/WETH.sol";
 import {MockERC20} from "solmate/src/test/utils/mocks/MockERC20.sol";
 
-import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
-import {Currency, CurrencyLibrary} from "pancake-v4-core/src/types/Currency.sol";
-import {IVault} from "pancake-v4-core/src/interfaces/IVault.sol";
-import {Vault} from "pancake-v4-core/src/Vault.sol";
-import {CLPoolManager} from "pancake-v4-core/src/pool-cl/CLPoolManager.sol";
-import {ICLPoolManager} from "pancake-v4-core/src/pool-cl/interfaces/ICLPoolManager.sol";
-import {BinPoolManager} from "pancake-v4-core/src/pool-bin/BinPoolManager.sol";
-import {IBinPoolManager} from "pancake-v4-core/src/pool-bin/interfaces/IBinPoolManager.sol";
-import {FixedPoint96} from "pancake-v4-core/src/pool-cl/libraries/FixedPoint96.sol";
-import {IHooks} from "pancake-v4-core/src/interfaces/IHooks.sol";
-import {CLPoolParametersHelper} from "pancake-v4-core/src/pool-cl/libraries/CLPoolParametersHelper.sol";
-import {BinPoolParametersHelper} from "pancake-v4-core/src/pool-bin/libraries/BinPoolParametersHelper.sol";
-import {ActionConstants} from "pancake-v4-periphery/src/libraries/ActionConstants.sol";
-import {Plan, Planner} from "pancake-v4-periphery/src/libraries/Planner.sol";
-import {CLPositionDescriptorOffChain} from "pancake-v4-periphery/src/pool-cl/CLPositionDescriptorOffChain.sol";
-import {CLPositionManager} from "pancake-v4-periphery/src/pool-cl/CLPositionManager.sol";
-import {BinPositionManager} from "pancake-v4-periphery/src/pool-bin/BinPositionManager.sol";
-import {Actions} from "pancake-v4-periphery/src/libraries/Actions.sol";
+import {PoolKey} from "infinity-core/src/types/PoolKey.sol";
+import {Currency, CurrencyLibrary} from "infinity-core/src/types/Currency.sol";
+import {IVault} from "infinity-core/src/interfaces/IVault.sol";
+import {Vault} from "infinity-core/src/Vault.sol";
+import {CLPoolManager} from "infinity-core/src/pool-cl/CLPoolManager.sol";
+import {ICLPoolManager} from "infinity-core/src/pool-cl/interfaces/ICLPoolManager.sol";
+import {BinPoolManager} from "infinity-core/src/pool-bin/BinPoolManager.sol";
+import {IBinPoolManager} from "infinity-core/src/pool-bin/interfaces/IBinPoolManager.sol";
+import {FixedPoint96} from "infinity-core/src/pool-cl/libraries/FixedPoint96.sol";
+import {IHooks} from "infinity-core/src/interfaces/IHooks.sol";
+import {CLPoolParametersHelper} from "infinity-core/src/pool-cl/libraries/CLPoolParametersHelper.sol";
+import {BinPoolParametersHelper} from "infinity-core/src/pool-bin/libraries/BinPoolParametersHelper.sol";
+import {ActionConstants} from "infinity-periphery/src/libraries/ActionConstants.sol";
+import {Plan, Planner} from "infinity-periphery/src/libraries/Planner.sol";
+import {CLPositionDescriptorOffChain} from "infinity-periphery/src/pool-cl/CLPositionDescriptorOffChain.sol";
+import {CLPositionManager} from "infinity-periphery/src/pool-cl/CLPositionManager.sol";
+import {BinPositionManager} from "infinity-periphery/src/pool-bin/BinPositionManager.sol";
+import {Actions} from "infinity-periphery/src/libraries/Actions.sol";
 import {IV3NonfungiblePositionManager} from
-    "pancake-v4-periphery/src/interfaces/external/IV3NonfungiblePositionManager.sol";
-import {IERC721Permit} from "pancake-v4-periphery/src/pool-cl/interfaces/IERC721Permit.sol";
-import {IPositionManager} from "pancake-v4-periphery/src/interfaces/IPositionManager.sol";
-import {IBinPositionManager} from "pancake-v4-periphery/src/pool-bin/interfaces/IBinPositionManager.sol";
-import {OldVersionHelper} from "pancake-v4-periphery/test/helpers/OldVersionHelper.sol";
-import {BinLiquidityHelper} from "pancake-v4-periphery/test/pool-bin/helper/BinLiquidityHelper.sol";
+    "infinity-periphery/src/interfaces/external/IV3NonfungiblePositionManager.sol";
+import {IERC721Permit} from "infinity-periphery/src/interfaces/IERC721Permit.sol";
+import {IPositionManager} from "infinity-periphery/src/interfaces/IPositionManager.sol";
+import {IBinPositionManager} from "infinity-periphery/src/pool-bin/interfaces/IBinPositionManager.sol";
+import {OldVersionHelper} from "infinity-periphery/test/helpers/OldVersionHelper.sol";
+import {BinLiquidityHelper} from "infinity-periphery/test/pool-bin/helper/BinLiquidityHelper.sol";
 
 import {IPancakeV3PoolDeployer} from "../src/modules/pancakeswap/v3/interfaces/IPancakeV3PoolDeployer.sol";
 import {IPancakeV3Factory} from "../src/modules/pancakeswap/v3/interfaces/IPancakeV3Factory.sol";
@@ -40,15 +40,15 @@ import {Commands} from "../src/libraries/Commands.sol";
 import {RouterParameters} from "../src/base/RouterImmutables.sol";
 import {Dispatcher} from "../src/base/Dispatcher.sol";
 import {UniversalRouter} from "../src/UniversalRouter.sol";
-import {BasePancakeSwapV4} from "./v4/BasePancakeSwapV4.sol";
-import {ICLRouterBase} from "pancake-v4-periphery/src/interfaces/IV4Router.sol";
-import {TickMath} from "pancake-v4-core/src/pool-cl/libraries/TickMath.sol";
+import {BasePancakeSwapInfinity} from "./infinity/BasePancakeSwapInfinity.sol";
+import {ICLRouterBase} from "infinity-periphery/src/interfaces/IInfinityRouter.sol";
+import {TickMath} from "infinity-core/src/pool-cl/libraries/TickMath.sol";
 
 interface IPancakeV3LikePairFactory {
     function createPool(address tokenA, address tokenB, uint24 fee) external returns (address pool);
 }
 
-contract UniversalRouterCrossVersionTest is BasePancakeSwapV4, OldVersionHelper, BinLiquidityHelper {
+contract UniversalRouterCrossVersionTest is BasePancakeSwapInfinity, OldVersionHelper, BinLiquidityHelper {
     using BinPoolParametersHelper for bytes32;
     using CLPoolParametersHelper for bytes32;
     using Planner for Plan;
@@ -64,7 +64,7 @@ contract UniversalRouterCrossVersionTest is BasePancakeSwapV4, OldVersionHelper,
     // v3 related
     IV3NonfungiblePositionManager v3Nfpm;
 
-    // v4 related
+    // infinity related
     IVault vault;
     IBinPoolManager binPoolManager;
     BinPositionManager binPositionManager;
@@ -105,7 +105,7 @@ contract UniversalRouterCrossVersionTest is BasePancakeSwapV4, OldVersionHelper,
         );
 
         ///////////////////////////////////
-        //////////// v4 setup /////////////
+        //////////// infinity setup /////////////
         ///////////////////////////////////
         vault = IVault(new Vault());
         binPoolManager = new BinPoolManager(vault);
@@ -115,7 +115,7 @@ contract UniversalRouterCrossVersionTest is BasePancakeSwapV4, OldVersionHelper,
 
         binPositionManager = new BinPositionManager(vault, binPoolManager, permit2, IWETH9(address(weth)));
         CLPositionDescriptorOffChain pd =
-            new CLPositionDescriptorOffChain("https://pancakeswap.finance/v4/pool-cl/positions/");
+            new CLPositionDescriptorOffChain("https://pancakeswap.finance/infinity/pool-cl/positions/");
         clPositionManager = new CLPositionManager(vault, clPoolManager, permit2, 100_000, pd, IWETH9(address(weth)));
 
         ///////////////////////////////////
@@ -131,12 +131,12 @@ contract UniversalRouterCrossVersionTest is BasePancakeSwapV4, OldVersionHelper,
             v3InitCodeHash: bytes32(0x6ce8eb472fa82df5469c6ab6d485f17c3ad13c8cd7af59b3d4a8026c5ce0f7e2),
             stableFactory: address(0),
             stableInfo: address(0),
-            v4Vault: address(vault),
-            v4ClPoolManager: address(clPoolManager),
-            v4BinPoolManager: address(binPoolManager),
+            infiVault: address(vault),
+            infiClPoolManager: address(clPoolManager),
+            infiBinPoolManager: address(binPoolManager),
             v3NFTPositionManager: address(v3Nfpm),
-            v4ClPositionManager: address(clPositionManager),
-            v4BinPositionManager: address(binPositionManager)
+            infiClPositionManager: address(clPositionManager),
+            infiBinPositionManager: address(binPositionManager)
         });
         router = new UniversalRouter(params);
         _approvePermit2ForCurrency(address(this), currency0, address(router), permit2);
@@ -150,15 +150,15 @@ contract UniversalRouterCrossVersionTest is BasePancakeSwapV4, OldVersionHelper,
         // add liquidity to v3 usdt-weth pool
         _mintV3Liquidity(address(usdt), address(weth), liquidityProvider);
 
-        // add liquidity to v4 usdc-eth cl-pool
-        clPoolKeyWithETH = _mintV4CLLiquidity(address(usdc), address(0), liquidityProvider);
-        // add liquidity to v4 usdc-weth cl-pool
-        clPoolKeyWithWrappedETH = _mintV4CLLiquidity(address(usdc), address(weth), liquidityProvider);
+        // add liquidity to infinity usdc-eth cl-pool
+        clPoolKeyWithETH = _mintInfiCLLiquidity(address(usdc), address(0), liquidityProvider);
+        // add liquidity to infinity usdc-weth cl-pool
+        clPoolKeyWithWrappedETH = _mintInfiCLLiquidity(address(usdc), address(weth), liquidityProvider);
     }
 
     /// @dev case0:
     ///     hop1. swap with a v3 (weth-usdt) pool
-    ///     hop2. swap with a v4 native (eth-usdc) pool
+    ///     hop2. swap with a infinity native (eth-usdc) pool
     function test_corssVersionSwapCase0() public {
         // 0. user starts with 1 ether USDT
         address trader = makeAddr("trader");
@@ -171,7 +171,7 @@ contract UniversalRouterCrossVersionTest is BasePancakeSwapV4, OldVersionHelper,
         bytes memory commands = abi.encodePacked(
             bytes1(uint8(Commands.V3_SWAP_EXACT_IN)), // USDT-> WETH
             bytes1(uint8(Commands.UNWRAP_WETH)), // WETH -> ETH
-            bytes1(uint8(Commands.V4_SWAP)) // ETH -> USDC
+            bytes1(uint8(Commands.INFI_SWAP)) // ETH -> USDC
         );
 
         // 2. build up corresponding inputs
@@ -191,7 +191,7 @@ contract UniversalRouterCrossVersionTest is BasePancakeSwapV4, OldVersionHelper,
         // uint256 amountMin = 0 (by default all the WETH will be unwrapped);
         inputs[1] = abi.encode(ActionConstants.ADDRESS_THIS, 0);
 
-        // 2.3. prepare v4 exact in params (i.e. ETH -> USDC)
+        // 2.3. prepare infinity exact in params (i.e. ETH -> USDC)
         Plan memory planner = Planner.init();
 
         // 2.3.1. send ETH to vault ahead of time so that we can use it to pay for the following swap
@@ -200,7 +200,7 @@ contract UniversalRouterCrossVersionTest is BasePancakeSwapV4, OldVersionHelper,
         // bool payerIsUser = false i.e. use the ETH we just received from unwrapping WETH
         planner.add(Actions.SETTLE, abi.encode(CurrencyLibrary.NATIVE, ActionConstants.CONTRACT_BALANCE, false));
 
-        // 2.3.2. v4 swap params
+        // 2.3.2. infinity swap params
         ICLRouterBase.CLSwapExactInputSingleParams memory params = ICLRouterBase.CLSwapExactInputSingleParams({
             poolKey: clPoolKeyWithETH,
             zeroForOne: true, // token0 is ETH
@@ -234,7 +234,7 @@ contract UniversalRouterCrossVersionTest is BasePancakeSwapV4, OldVersionHelper,
 
     /// @dev case1:
     ///     hop1. swap with a v3 (weth-usdt) pool
-    ///     hop2. swap with a v4 non-native (weth-usdc) pool
+    ///     hop2. swap with a infinity non-native (weth-usdc) pool
     function test_corssVersionSwapCase1() public {
         // 0. user starts with 1 ether USDT
         address trader = makeAddr("trader");
@@ -246,7 +246,7 @@ contract UniversalRouterCrossVersionTest is BasePancakeSwapV4, OldVersionHelper,
         // 1. build up univeral router commands list
         bytes memory commands = abi.encodePacked(
             bytes1(uint8(Commands.V3_SWAP_EXACT_IN)), // USDT-> WETH
-            bytes1(uint8(Commands.V4_SWAP)) // WETH -> USDC
+            bytes1(uint8(Commands.INFI_SWAP)) // WETH -> USDC
         );
 
         // 2. build up corresponding inputs
@@ -260,7 +260,7 @@ contract UniversalRouterCrossVersionTest is BasePancakeSwapV4, OldVersionHelper,
         // bool payerIsUser = true since user is paying USDT
         inputs[0] = abi.encode(ActionConstants.ADDRESS_THIS, 1 ether, 0, path, true);
 
-        // 2.2. prepare v4 exact in params (i.e. WETH -> USDC)
+        // 2.2. prepare infinity exact in params (i.e. WETH -> USDC)
         Plan memory planner = Planner.init();
 
         // 2.2.1. send ETH to vault ahead of time so that we can use it to pay for the following swap
@@ -269,7 +269,7 @@ contract UniversalRouterCrossVersionTest is BasePancakeSwapV4, OldVersionHelper,
         // bool payerIsUser = false i.e. use the WETH we just received from v3Swap
         planner.add(Actions.SETTLE, abi.encode(Currency.wrap(address(weth)), ActionConstants.CONTRACT_BALANCE, false));
 
-        // 2.2.2. v4 swap params
+        // 2.2.2. infinity swap params
         bool zeroForOne = Currency.unwrap(clPoolKeyWithWrappedETH.currency0) == address(weth);
         ICLRouterBase.CLSwapExactInputSingleParams memory params = ICLRouterBase.CLSwapExactInputSingleParams({
             poolKey: clPoolKeyWithWrappedETH,
@@ -303,7 +303,7 @@ contract UniversalRouterCrossVersionTest is BasePancakeSwapV4, OldVersionHelper,
     }
 
     /// @dev case2:
-    ///     hop1. swap with a v4 native (eth-usdc) pool
+    ///     hop1. swap with a infinity native (eth-usdc) pool
     ///     hop2. swap with a v3 (weth-usdt) pool
     function test_corssVersionSwapCase2() public {
         // 0. user starts with 1 ether usdc
@@ -315,7 +315,7 @@ contract UniversalRouterCrossVersionTest is BasePancakeSwapV4, OldVersionHelper,
 
         // 1. build up univeral router commands list
         bytes memory commands = abi.encodePacked(
-            bytes1(uint8(Commands.V4_SWAP)), // USDC -> ETH
+            bytes1(uint8(Commands.INFI_SWAP)), // USDC -> ETH
             bytes1(uint8(Commands.WRAP_ETH)), // ETH -> WETH
             bytes1(uint8(Commands.V3_SWAP_EXACT_IN)), // WETH -> USDT
             bytes1(uint8(Commands.SWEEP)) // SWEEP WETH
@@ -324,10 +324,10 @@ contract UniversalRouterCrossVersionTest is BasePancakeSwapV4, OldVersionHelper,
         // 2. build up corresponding inputs
         bytes[] memory inputs = new bytes[](4);
 
-        // 2.1. prepare v4 exact in params (i.e. ETH -> USDC)
+        // 2.1. prepare infinity exact in params (i.e. ETH -> USDC)
         Plan memory planner = Planner.init();
 
-        // 2.1.1. v4 swap params
+        // 2.1.1. infinity swap params
         ICLRouterBase.CLSwapExactInputSingleParams memory params = ICLRouterBase.CLSwapExactInputSingleParams({
             poolKey: clPoolKeyWithETH,
             zeroForOne: false, // token0 is ETH
@@ -351,7 +351,7 @@ contract UniversalRouterCrossVersionTest is BasePancakeSwapV4, OldVersionHelper,
 
         // 2.2. wrap ETH to WETH:
         // address recipient = ADDRESS_THIS to make sure WETH is send back to universal router;
-        // uint256 amount = ActionConstants.CONTRACT_BALANCE to make sure all the ETH from v4 is wrapped
+        // uint256 amount = ActionConstants.CONTRACT_BALANCE to make sure all the ETH from infinity is wrapped
         inputs[1] = abi.encode(ActionConstants.ADDRESS_THIS, ActionConstants.CONTRACT_BALANCE);
 
         // 2.3. prepare v3 exact in params (i.e. WETH -> USDT):
@@ -384,7 +384,7 @@ contract UniversalRouterCrossVersionTest is BasePancakeSwapV4, OldVersionHelper,
     }
 
     /// @dev case3:
-    ///     hop1. swap with a v4 non-native (weth-usdc) pool
+    ///     hop1. swap with a infinity non-native (weth-usdc) pool
     ///     hop2. swap with a v3 (weth-usdt) pool
     function test_corssVersionSwapCase3() public {
         // 0. user starts with 1 ether usdc
@@ -396,7 +396,7 @@ contract UniversalRouterCrossVersionTest is BasePancakeSwapV4, OldVersionHelper,
 
         // 1. build up univeral router commands list
         bytes memory commands = abi.encodePacked(
-            bytes1(uint8(Commands.V4_SWAP)), // USDC -> WETH
+            bytes1(uint8(Commands.INFI_SWAP)), // USDC -> WETH
             bytes1(uint8(Commands.V3_SWAP_EXACT_IN)), // WETH -> USDT
             bytes1(uint8(Commands.SWEEP)) // SWEEP WETH
         );
@@ -404,10 +404,10 @@ contract UniversalRouterCrossVersionTest is BasePancakeSwapV4, OldVersionHelper,
         // 2. build up corresponding inputs
         bytes[] memory inputs = new bytes[](3);
 
-        // 2.1. prepare v4 exact in params (i.e. WETH -> USDC)
+        // 2.1. prepare infinity exact in params (i.e. WETH -> USDC)
         Plan memory planner = Planner.init();
 
-        // 2.1.1. v4 swap params
+        // 2.1.1. infinity swap params
         bool zeroForOne = Currency.unwrap(clPoolKeyWithWrappedETH.currency0) != address(weth);
         ICLRouterBase.CLSwapExactInputSingleParams memory params = ICLRouterBase.CLSwapExactInputSingleParams({
             poolKey: clPoolKeyWithWrappedETH,
@@ -490,7 +490,7 @@ contract UniversalRouterCrossVersionTest is BasePancakeSwapV4, OldVersionHelper,
         v3Nfpm.mint(mintParams);
     }
 
-    function _mintV4CLLiquidity(address _token0, address _token1, address recipient)
+    function _mintInfiCLLiquidity(address _token0, address _token1, address recipient)
         internal
         returns (PoolKey memory key)
     {
@@ -522,7 +522,7 @@ contract UniversalRouterCrossVersionTest is BasePancakeSwapV4, OldVersionHelper,
         planner.add(Actions.SWEEP, abi.encode(key.currency1, recipient));
 
         // prep universal router actions
-        bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.V4_CL_POSITION_CALL)));
+        bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.INFI_CL_POSITION_CALL)));
         bytes[] memory inputs = new bytes[](1);
         inputs[0] =
             abi.encodePacked(IPositionManager.modifyLiquidities.selector, abi.encode(planner.encode(), block.timestamp));
